@@ -89,6 +89,10 @@ and it will be plausible, and you will not notice for three phases.
    dedicated docs PR.
 3. Note any requirement that turned out to be wrong, ambiguous, or
    unimplementable — as a spec PR, not a silent code deviation.
+4. Check the version (§3.10): does the number on `main` account for
+   everything merged since the last tag? Closing a phase is not itself a
+   reason to bump — it is the natural moment to catch a bump that was
+   missed.
 
 ### 2.2 Middle loop — per slice
 
@@ -193,7 +197,7 @@ real deviations.
 
 **Step 4 PR body** should contain, in this order:
 
-1. Slice ID, tasks covered, `REQ-*` IDs implemented.
+1. Slice ID, tasks covered, `REQ-*` IDs implemented, semver impact (§3.10).
 2. **Deviations from the approved plan**, with reasons. If none, say so.
 3. **What to look at and why** — the 2–4 places where a reviewer's
    attention is worth more than CI's. Prefer: anything touching wire
@@ -334,7 +338,7 @@ Create `doc/decisions.md`. Append-only, numbered, one entry per resolved
 question:
 
 ```markdown
-## D-004 — Parser implementation for lido-cddl
+## D-nnn — Parser implementation for lido-cddl
 Date: 2026-08-02 · Closes: design.md §8 Q1 · Phase: 1
 
 Decision: hand-written recursive descent.
@@ -403,6 +407,49 @@ At those two points, run `/code-review ultra` on the accumulated branch
 budget real time for the DoD rather than treating it as a formality.
 `/security-review` is worth one pass at the end of Phase 9, where the
 fuzzing and malformed-input work lands.
+
+### 3.10 Versioning and tags
+
+Decided in `doc/decisions.md` D-004; the rules in short, because they
+apply to every PR.
+
+The workspace carries **one version**, in `[workspace.package]`, inherited
+by all nine members. It moves only when a PR changes the **versioned
+surface** — the shipped crates' public Rust API, the CLI interface, the
+shape of generated code, or the wire format — and it moves by whatever
+semver says about *that change*. Not once per PR, not once per phase.
+
+The trap worth naming: **pre-1.0, the minor is the breaking axis.** Cargo
+treats `0.1.x → 0.2.0` as incompatible and `0.1.0 → 0.1.1` as compatible,
+so until 1.0 a breaking change is a *minor* bump and new functionality is a
+*patch* bump — one slot down from the mapping everyone recites. `1.0.0` is
+cut at Phase 10 with the first published artifacts.
+
+Then:
+
+- **Bump in the PR that earns it.** The version change belongs in the same
+  diff as the change that justifies it, where a reviewer can see both.
+- **Say so in the PR body** (§2.2 item 1), including when the answer is
+  "none". An omitted bump and a considered "none" look identical in a diff;
+  the PR body is what tells them apart.
+- **Tag after merge, only when the version moved.** Annotated, on `main`,
+  at the merge commit: `git tag -a v0.1.1 -m "…" && git push origin v0.1.1`.
+  A PR that doesn't move the version isn't tagged — the merge commit and PR
+  number already identify that state.
+
+This belongs in §3 because the failure it prevents is a version that stops
+tracking compatibility — at which point it is a number that costs a line in
+every diff and tells a downstream consumer nothing. It also protects
+REQ-GEN-195: the Lido version is stamped into a per-language manifest
+precisely so an upgrade doesn't diff every generated file, which a version
+that increments on every merge would waste.
+
+Two numbers are **not** this one and don't move with it: the runtime API
+version asserted in generated code (REQ-GEN-190) and the serialized IR
+schema version (REQ-IR-050). Slice 10.7 sets the policy for published
+artifacts and supersedes this section there — in particular whether the CLI
+and the three runtime libraries version in lockstep, which a single
+workspace version currently assumes.
 
 ---
 

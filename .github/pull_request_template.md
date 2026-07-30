@@ -8,6 +8,9 @@ reviewer reads 1 for scope, 3 to know where to spend their attention.
 Slice: <!-- e.g. 0.2 — CI and dependency gates; link doc/slices/<id>-<slug>.md -->
 Tasks covered:
 `REQ-*` implemented:
+Semver impact: <!-- none | patch | minor | major, and the version this PR sets.
+Pre-1.0 the minor is the breaking axis: breaking -> minor, additive -> patch
+(development.md §3.10). "none" is the common answer — say it explicitly. -->
 
 ## 2. Deviations from the approved plan
 

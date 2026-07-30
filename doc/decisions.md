@@ -103,3 +103,63 @@ conventional case for committing the lockfile, and both slice 0.2's
 
 Consequences: it shapes every future PR diff — dependency changes are
 visible and reviewable rather than implicit.
+
+## D-004 — Version follows semver over a defined surface; tags mark version changes
+Date: 2026-07-29 · Closes: process gap raised after slice 0.1 · Phase: 0
+
+Decision: four parts.
+
+1. **One version for the workspace.** `[workspace.package].version`,
+   inherited by all nine members, is the single number. It moves only in a
+   PR that changes the *versioned surface*, and by the amount semver
+   dictates for that change — not on a per-PR or per-phase cadence.
+2. **The versioned surface** is: the public Rust API of the crates that
+   ship (`lido-runtime`, `lido-cli`); the CLI interface (flags, exit codes,
+   the stdout/stderr contract); the shape of generated code; and the wire
+   format. A change outside all four — an internal refactor, a test, a
+   document, CI — carries no version change. Through Phase 4 that is most
+   PRs.
+3. **Pre-1.0 the minor is the compatibility axis**, because that is what
+   Cargo's resolver treats as breaking while the major is 0. So until
+   1.0: breaking → minor (`0.1.0` → `0.2.0`); additive or fix → patch
+   (`0.1.0` → `0.1.1`); major stays 0. `1.0.0` is cut at Phase 10 with the
+   first published artifacts, after which the usual mapping applies.
+4. **Tags mark version changes and nothing else.** After merging a PR that
+   moved the version, `main` gets an annotated tag (`git tag -a v0.1.1`)
+   at that merge commit. PRs that don't move the version aren't tagged.
+
+Alternatives: a bump and a tag on every merged PR (rejected — the version
+is workspace-inherited, so every bump touches `Cargo.toml` and
+`Cargo.lock` for all nine members: a guaranteed conflict between any two
+in-flight branches and a line of noise in every review, in exchange for a
+number no consumer can see before slice 10.2, when the merge commit and PR
+number already identify the state); version keyed to plan coordinates,
+minor = phase and patch = slice (rejected — self-documenting, but silent
+about compatibility, which is the only thing a version is ever read for,
+and with nowhere to put a fix PR that isn't a slice); tagging only at
+phase close (rejected — ties the number to the calendar rather than to the
+change, so a wire-format break mid-phase would ship untagged).
+
+Rationale: the version is not bookkeeping here — it is stamped into
+generated output (REQ-GEN-080), and REQ-GEN-195 puts that stamp in a
+single per-language manifest specifically so that upgrading Lido does not
+produce a diff touching every generated file in a downstream project. A
+version that increments on every merge turns that stamp into a build
+counter and spends what REQ-GEN-195 buys. Tying the number to the change
+keeps it meaningful. Semver is also what Cargo's resolver acts on from
+slice 10.2 onward, so the habit is cheaper to establish before publication
+than to retrofit at it.
+
+Consequences: every PR states its semver impact in its body (PR template
+§1), which makes the bump an explicit judgement rather than an omission —
+"none" is the expected answer for most of Phases 0–4. Pre-1.0, a run of
+breaking changes moves the minor quickly (`0.2`, `0.3` within one phase);
+that is the scheme working, not instability. Until slice 10.2 the surface
+has no external consumers, so each classification is a judgement with
+nothing external to check it against; the value is the habit and the
+record. The REQ-GEN-190 runtime API version and the REQ-IR-050 IR schema
+version are *separate* numbers with their own compatibility rules and are
+not slaved to this one. Slice 10.7 supersedes this entry for published
+artifacts: it owns whether the CLI and the three runtime libraries version
+in lockstep, and the single workspace version assumes they do — which 10.7
+may reverse.
