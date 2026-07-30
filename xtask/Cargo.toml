@@ -6,3 +6,9 @@ rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
 publish = false
+
+# Only for parsing `cargo metadata` output in tests/workspace_layout.rs.
+# MIT/Apache-2.0, so REQ-DEP-020 holds; it is the workspace's only
+# third-party dependency in this slice.
+[dev-dependencies]
+serde_json = "1"
