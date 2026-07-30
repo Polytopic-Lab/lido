@@ -42,8 +42,8 @@ fn crates_match_design_section_2() {
     let actual: BTreeSet<&str> = packages(&metadata).iter().map(package_name).collect();
     let expected: BTreeSet<&str> = EXPECTED_PACKAGES.into_iter().collect();
 
-    let missing: Vec<&&str> = expected.difference(&actual).collect();
-    let unexpected: Vec<&&str> = actual.difference(&expected).collect();
+    let missing: Vec<&str> = expected.difference(&actual).copied().collect();
+    let unexpected: Vec<&str> = actual.difference(&expected).copied().collect();
     assert_eq!(
         actual, expected,
         "missing from `cargo metadata`: {missing:?}; \
@@ -112,10 +112,13 @@ fn req_arch_040_no_backend_depends_on_another_backend() {
             continue;
         }
         for dependency in dependencies(package) {
-            let dependency = package_name(dependency);
+            // Direct declarations only, which is what REQ-ARCH-040 forbids
+            // between backends; nothing in design.md §2's graph sits between
+            // two backends for a transitive path to run through.
+            let dependency_name = package_name(dependency);
             assert!(
-                !BACKEND_PACKAGES.contains(&dependency),
-                "REQ-ARCH-040: backend `{name}` depends on backend `{dependency}`"
+                !BACKEND_PACKAGES.contains(&dependency_name),
+                "REQ-ARCH-040: backend `{name}` depends on backend `{dependency_name}`"
             );
         }
     }
