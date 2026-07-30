@@ -1,0 +1,27 @@
+[workspace]
+resolver = "2"
+
+# Listed explicitly rather than by glob: adding a crate is then a visible
+# edit here, and `xtask/tests/workspace_layout.rs` checks this list against
+# design.md §2.
+members = [
+    "crates/lido-cddl",
+    "crates/lido-ir",
+    "crates/lido-codegen",
+    "crates/lido-codegen-cpp",
+    "crates/lido-codegen-java",
+    "crates/lido-codegen-rust",
+    "crates/lido-cli",
+    "runtime/rust",
+    "xtask",
+]
+
+# Inherited by every member with `<key>.workspace = true`, so the values
+# live in one place and `cargo metadata` still reports them per package
+# (REQ-DEP-010, REQ-NFR-030).
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.97.1"
+license = "MIT"
+repository = "https://github.com/Polytopic-Lab/lido"

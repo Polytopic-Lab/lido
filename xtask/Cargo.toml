@@ -1,0 +1,16 @@
+[package]
+name = "xtask"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+
+# Only for parsing `cargo metadata` output in tests/workspace_layout.rs.
+# MIT/Apache-2.0, so REQ-DEP-020 holds; it is the workspace's only direct
+# third-party dependency in this slice (it pulls in serde and 9 more
+# transitively, all permissive — checked by hand until slice 0.2's
+# `cargo deny` gate exists).
+[dev-dependencies]
+serde_json = "1"

@@ -1,0 +1,12 @@
+# Pinned to an exact version, not a moving channel (REQ-NFR-030, D-001).
+# The pin matters most for rustfmt and clippy, whose output changes between
+# releases: it is what makes `cargo fmt --check` and
+# `cargo clippy -- -D warnings` agree across CI platforms.
+#
+# A bump is its own PR, expected to carry fmt and clippy churn, and is never
+# folded into a feature slice. `targets` is deferred to slice 2.7, which owns
+# the `no_std` job.
+[toolchain]
+channel = "1.97.1"
+components = ["rustfmt", "clippy"]
+profile = "minimal"
