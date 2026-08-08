@@ -1,0 +1,33 @@
+# cargo-deny configuration (REQ-DEP-020: permissive-only licenses, no
+# copyleft). Read by CI in `.github/workflows/ci.yml`'s `deny` job.
+#
+# `licenses`/`bans`/`sources` are pure functions of Cargo.lock and are the
+# required PR check. `advisories` is a separate job on the same workflow,
+# path-filtered and not required — see ci.yml and D-006 for why.
+
+[licenses]
+version = 2
+# Exactly REQ-DEP-020's five named licenses, so this list traces to the
+# requirement rather than to whatever happens to be in the tree today.
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "BSL-1.0",
+    # Not one of REQ-DEP-020's five, but forced by `unicode-ident`, whose
+    # license is `(MIT OR Apache-2.0) AND Unicode-3.0` — the AND means this
+    # term must be allowed explicitly. Permissive, non-copyleft; slice 0.2
+    # plan §4 Q4.
+    "Unicode-3.0",
+]
+confidence-threshold = 0.8
+
+[bans]
+multiple-versions = "warn"
+wildcards = "deny"
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]

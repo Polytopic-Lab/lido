@@ -1,0 +1,130 @@
+name: CI
+
+# Required checks (branch protection): test (one leg per matrix OS), fmt,
+# deny, runner-spec (one leg per matrix OS). `advisories` is deliberately
+# not required — see its job below and slice 0.2 plan §4 Q3.
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  # Every third-party action below is pinned by commit SHA, not by tag or
+  # branch — slice 0.2 plan §4 Q5. The version is named in a trailing
+  # comment so a bump is a one-line diff.
+  CARGO_TERM_COLOR: always
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        # Pinned labels, not `-latest` — slice 0.2 plan §4 Q1 / D-006.
+        os: [ubuntu-24.04, windows-2025, macos-26]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install pinned toolchain
+        run: rustup show
+      - run: cargo build --workspace
+      - run: cargo test --workspace
+      - run: cargo clippy --workspace --all-targets -- -D warnings
+
+  fmt:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install pinned toolchain
+        run: rustup show
+      - run: cargo fmt --all --check
+
+  # REQ-DEP-020: permissive-only licenses, enforced as a required check on
+  # every PR. `licenses`/`bans`/`sources` are pure functions of Cargo.lock,
+  # so they don't share `advisories`' flakiness against an external
+  # database — slice 0.2 plan §4 Q3.
+  deny:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: EmbarkStudios/cargo-deny-action@3c6349835b2b7b196a839186cb8b78e02f7b5f25 # v2.1.1
+        with:
+          rust-version: "1.97.1"
+          command: check licenses bans sources
+
+  # Not a required check. The advisories database changes independently of
+  # this repo, so gating every unrelated PR on it would make DoD clause 1
+  # ("CI is green") depend on the outside world — slice 0.2 plan §4 Q3.
+  # Runs only when a dependency-relevant file changed, or on manual
+  # dispatch; a job that legitimately does nothing must not be required,
+  # or it blocks the PR forever (§3.5 in the plan).
+  advisories:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - id: filter
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            base="${{ github.event.pull_request.base.sha }}"
+          else
+            base="HEAD~1"
+          fi
+          changed="$(git diff --name-only "$base" "${{ github.sha }}")"
+          if echo "$changed" | grep -qE '(^|/)Cargo\.(toml|lock)$|(^|/)deny\.toml$'; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: EmbarkStudios/cargo-deny-action@3c6349835b2b7b196a839186cb8b78e02f7b5f25 # v2.1.1
+        if: steps.filter.outputs.run == 'true' || github.event_name == 'workflow_dispatch'
+        with:
+          rust-version: "1.97.1"
+          command: check advisories
+
+  # REQ-NFR-010's artifact: the reference runner configuration that slice
+  # 9.6 measures the 5-second bar against. Linux is the reference (D-005);
+  # the other two legs are recorded as informative context only.
+  runner-spec:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-2025, macos-26]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install pinned toolchain
+        run: rustup show
+      - name: Runner spec (Linux)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          echo "image: $ImageOS $ImageVersion"
+          echo "arch: $(uname -m)"
+          echo "cores: $(nproc)"
+          echo "memory: $(free -h | awk '/Mem:/ {print $2}')"
+          rustc -Vv
+      - name: Runner spec (macOS)
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          echo "image: $ImageOS $ImageVersion"
+          echo "arch: $(uname -m)"
+          echo "cores: $(sysctl -n hw.ncpu)"
+          echo "memory: $(( $(sysctl -n hw.memsize) / 1073741824 )) GB"
+          rustc -Vv
+      - name: Runner spec (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Write-Host "image: $env:ImageOS $env:ImageVersion"
+          Write-Host "arch: $env:PROCESSOR_ARCHITECTURE"
+          Write-Host "cores: $env:NUMBER_OF_PROCESSORS"
+          $mem = (Get-CimInstance Win32_ComputerSystem).TotalPhysicalMemory / 1GB
+          Write-Host "memory: $mem GB"
+          rustc -Vv
