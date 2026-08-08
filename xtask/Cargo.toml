@@ -14,13 +14,3 @@ publish = false
 # `cargo deny` gate exists).
 [dev-dependencies]
 serde_json = "1"
-
-# DELIBERATE COPYLEFT CANARY (slice 0.2 plan §3.4 / §4 Q6). GPL-3.0-or-later
-# is not permitted by REQ-DEP-020 and deny.toml's allow-list. This commit
-# exists to demonstrate the `deny` CI job fails closed; it is reverted in
-# the very next commit. `cfg(false)` so it is resolved into Cargo.lock and
-# seen by `cargo deny` without the `test` job also trying to compile it —
-# synfx-dsp requires nightly, which would fail `cargo build` for an
-# unrelated reason and muddy this demonstration.
-[target.'cfg(false)'.dependencies]
-synfx-dsp = "0.5.6"
