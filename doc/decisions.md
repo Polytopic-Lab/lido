@@ -104,6 +104,119 @@ conventional case for committing the lockfile, and both slice 0.2's
 Consequences: it shapes every future PR diff — dependency changes are
 visible and reviewable rather than implicit.
 
+## D-005 — Reference CI runner configuration (REQ-NFR-010 artifact)
+Date: 2026-08-08 · Closes: slice 0.2 plan §4 Q2, DoD clause 3 · Phase: 0
+
+Decision: Linux (`ubuntu-24.04`) is *the* reference runner REQ-NFR-010's
+5-second bar is measured against. Recorded verbatim from the `runner-spec
+(ubuntu-24.04)` job of CI run
+[31260737102](https://github.com/Polytopic-Lab/lido/actions/runs/31260737102)
+(2026-08-08):
+
+```
+image: ubuntu24 20260720.247.2
+arch: x86_64
+cores: 4
+memory: 15Gi
+rustc 1.97.1 (8bab26f4f 2026-07-14)
+binary: rustc
+commit-hash: 8bab26f4f68e0e26f0bb7960be334d5b520ea452
+commit-date: 2026-07-14
+host: x86_64-unknown-linux-gnu
+release: 1.97.1
+LLVM version: 22.1.6
+```
+
+Slice 9.6's measurement assumes the `--release` cargo profile — a
+debug-build timing is not meaningful against a 5-second bar — and a *cold*
+dependency cache: GitHub-hosted runners provision a fresh VM per job, so
+the first `cargo build` in a job is the only cache state this record can
+promise reproduces.
+
+The other two matrix legs, informative only:
+
+```
+macos-26:   image macos26 20260728.0273.1 · arm64 · 3 cores · 7 GB
+windows-2025: image win25-vs2026 20260803.193.1 · AMD64 · 4 cores · ~16 GB
+```
+(both: `rustc 1.97.1 (8bab26f4f 2026-07-14)`, `LLVM version: 22.1.6`)
+
+Alternatives: recording all three platforms as co-equal references
+(rejected — REQ-NFR-010 names a singular reference runner, and three
+co-equal numbers could not be violated by a regression that broke only
+one); macOS or Windows as the reference (rejected — Linux is the cheapest
+and fastest of the three and the one CI will always run, plan §4 Q2).
+
+Rationale: slice 9.6 needs a reproducible figure to measure against, not a
+range. Recording the exact image label, core count, and toolchain build
+means a 5-second-bar failure three phases from now can be attributed to
+either a real regression or a runner change, rather than argued about.
+
+Consequences: if GitHub deprecates the `ubuntu-24.04` label, the bump is
+its own PR (same shape as D-001's toolchain-bump consequence), and it gets
+a new decision entry that supersedes this one rather than an edit to it.
+
+## D-006 — CI shape: pinned runners, job split, what's not gated yet
+Date: 2026-08-08 · Closes: slice 0.2 plan §4 Q1, Q3, Q5, Q8 · Phase: 0
+
+Decision: four parts.
+
+1. **Runner images are pinned by label** — `ubuntu-24.04`, `windows-2025`,
+   `macos-26` — not `-latest`.
+2. **Five jobs** in `.github/workflows/ci.yml`: `test` (build, test,
+   clippy; 3-OS matrix), `fmt` (Linux only), `deny` (`cargo deny check
+   licenses bans sources`, Linux only, **required**), `advisories` (`cargo
+   deny check advisories`, Linux only, path-filtered to `Cargo.lock`,
+   `Cargo.toml`, `**/Cargo.toml`, `deny.toml`, plus `workflow_dispatch`,
+   **not required**), and `runner-spec` (3-OS matrix, produces D-005).
+   Dependabot alerts are enabled (confirmed via the GitHub API — a 204 on
+   `GET /repos/.../vulnerability-alerts`); Dependabot version-update PRs
+   are left off.
+3. **Every third-party Action is pinned by commit SHA**, not tag or
+   branch: `actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1`
+   (v7.0.1), `EmbarkStudios/cargo-deny-action@3c6349835b2b7b196a839186cb8b78e02f7b5f25`
+   (v2.1.1). No toolchain-install action is used — GitHub-hosted runners
+   ship `rustup`, which resolves `rust-toolchain.toml` (D-001)
+   automatically on the first `cargo`/`rustc` invocation; `rustup show` is
+   run as an explicit first step so that resolution happens up front
+   rather than inside the first timed command.
+4. **Branch protection on `main`**: the 8 non-`advisories` job-legs listed
+   above are required status checks (not strict — branches need not be up
+   to date); a pull request is required to merge; 0 approvals required;
+   administrators are included (no force-push around a broken `main`);
+   linear history is required; force-pushes and deletions are disabled on
+   `main`.
+
+Alternatives: tracking `-latest` runner images (rejected — the whole point
+of D-001 was that `rustfmt`/`clippy` output must not drift underneath CI,
+and an unpinned image can rotate that out from under it); one `cargo deny
+check` job covering `advisories` too (rejected — ties DoD clause 1, "CI is
+green," to an external advisory database's publish schedule rather than to
+this repo's own changes); `cargo install cargo-deny --locked` instead of
+the Embark action (rejected — minutes of compile time on every PR, against
+an action already pinned by SHA).
+
+Rationale: this is D-001's toolchain-pinning argument applied to the rest
+of the CI surface — anything that can silently change the pass/fail
+verdict underneath a fixed set of source files should be pinned, and the
+resulting bump should be its own reviewable PR.
+
+Consequences: a runner-image deprecation, a toolchain bump, or an Action
+version bump are each their own PR, expected to carry no code changes.
+Branch protection's required-check list does not update itself — renaming
+a job or changing the matrix means the list in this entry (and on GitHub)
+goes stale until someone updates both by hand. Per plan.md §2's
+"Deliberately not created" list: no MSRV job (arrives slice 10.1), no
+`no_std` job (slice 2.7), no requirement-coverage check (slice 1.4), no
+determinism test (Phase 5), no `-fno-exceptions -fno-rtti` build (Phase
+8), no benchmark/throughput job (slice 9.6/9.9), no release/publish
+workflow (Phase 10), no merge queue. development.md §3.5 lists `cargo deny
+check` unqualified as a required check; this entry's split of
+`licenses`/`bans`/`sources` (required) from `advisories` (not required) is
+the more precise statement, and development.md should be reconciled to it
+in the Phase 0 close docs PR (slice 0.1 plan §5 already flagged that PR for
+the `.github/`/`deny.toml` gap in design.md §2; add this to its scope).
+
 ## D-004 — Version follows semver over a defined surface; tags mark version changes
 Date: 2026-07-29 · Closes: process gap raised after slice 0.1 · Phase: 0
 
