@@ -320,7 +320,9 @@ From slice 0.2, plus additions as later phases land, the required checks:
 - `cargo build` / `cargo test` on Linux, macOS, Windows
 - `cargo clippy -- -D warnings`
 - `cargo fmt --check`
-- `cargo deny check` (permissive-only, REQ-DEP-020)
+- `cargo deny check licenses bans sources` (permissive-only, REQ-DEP-020)
+  — `licenses`/`bans`/`sources` are required; `advisories` is a separate
+  path-filtered job, not required (see D-006)
 - Conformance self-check once slice 1.2 lands
 - `no_std` target build once slice 2.7 lands (REQ-RT-110)
 - Requirement-coverage check once slice 1.4 lands

@@ -51,6 +51,10 @@ crate (REQ-ARCH-030/040):
 ```
 lido/
 ├── Cargo.toml                  # workspace root
+├── deny.toml                   # cargo-deny config (REQ-DEP-020)
+├── .github/
+│   └── workflows/
+│       └── ci.yml              # required checks: test, fmt, clippy, deny
 ├── crates/
 │   ├── lido-cddl/               # lexer + parser: CDDL text -> AST
 │   ├── lido-ir/                 # name resolution, validation, AST -> IR lowering, IR (de)serialization

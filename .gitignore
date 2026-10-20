@@ -8,3 +8,7 @@
 .DS_Store
 .idea/
 .vscode/
+
+# Local development notes and settings (not part of the project)
+PROJECT_NOTES.md
+.claude/settings.local.json
