@@ -1,0 +1,11 @@
+; Breakable cycles (REQ-CDDL-090/097): one through an optional field, one
+; through an array.
+Node = {
+  value: int,
+  ? next: Node,
+}
+
+Tree = {
+  label: tstr,
+  children: [* Tree],
+}

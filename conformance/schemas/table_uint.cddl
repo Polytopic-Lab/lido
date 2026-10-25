@@ -1,0 +1,12 @@
+; Table with unsigned-integer keys and a struct value, nested in a struct.
+Item = {
+  label: tstr,
+  qty: uint,
+}
+
+Inventory = { * uint => Item }
+
+Warehouse = {
+  name: tstr,
+  stock: Inventory,
+}

@@ -1,0 +1,6 @@
+; Enumerations of literals, one per kind (specs.md §3, D-008).
+Color = "red" / "green" / "blue"
+
+; Deliberately neither 0,1,2 nor contiguous, so that encoding the literal
+; (REQ-RT-385) differs from encoding an ordinal index.
+Status = 10 / 20 / 30

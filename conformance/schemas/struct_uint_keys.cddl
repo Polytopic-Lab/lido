@@ -1,0 +1,8 @@
+; Integer-keyed struct, COSE-style (REQ-KEY-010). Keys are non-contiguous
+; and declared out of order, so numeric order and declaration order differ
+; (REQ-KEY-050).
+Header = {
+  9: tstr,
+  1: int,
+  2: bstr,
+}

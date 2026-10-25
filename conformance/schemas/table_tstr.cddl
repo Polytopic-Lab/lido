@@ -1,0 +1,2 @@
+; Table with text keys.
+Scores = { * tstr => int }

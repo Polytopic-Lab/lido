@@ -1,0 +1,9 @@
+; Homogeneous arrays: a primitive element type and a struct element type.
+Numbers = [* int]
+
+Point = {
+  x: int,
+  y: int,
+}
+
+Polyline = [* Point]

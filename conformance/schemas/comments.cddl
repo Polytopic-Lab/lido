@@ -1,0 +1,11 @@
+; Comments and whitespace per RFC 8610 §2.
+
+; A doc comment directly above a type (REQ-GEN-180).
+Documented = {
+  ; A doc comment above a field.
+  id: uint, ; trailing comment
+  title: tstr,
+
+  ; Blank lines and indentation are insignificant.
+       ? tags: [* tstr],
+}

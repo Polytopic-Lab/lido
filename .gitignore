@@ -12,3 +12,6 @@
 # Local development notes and settings (not part of the project)
 PROJECT_NOTES.md
 .claude/settings.local.json
+
+# Python venv for conformance tooling
+.venv/

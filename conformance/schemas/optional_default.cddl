@@ -1,0 +1,7 @@
+; Optional, defaulted, and nullable fields. `note` is present-or-absent
+; AND null-or-text: REQ-RT-330 keeps the two distinct.
+Settings = {
+  ? nickname: tstr,
+  ? retries: uint .default 3,
+  ? note: tstr / null,
+}

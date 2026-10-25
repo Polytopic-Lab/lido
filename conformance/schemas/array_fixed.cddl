@@ -1,0 +1,3 @@
+; Fixed-shape heterogeneous array with a trailing optional element
+; (the REQ-COMPAT-060 fixture).
+Triple = [uint, tstr, ? bool]

@@ -1,0 +1,13 @@
+; Values JSON cannot express natively (specs.md §9.2).
+Edge = {
+  blob: bstr,       ; REQ-RT-200
+  big: uint,        ; REQ-RT-220, above 2^53-1
+  signed: int,      ; REQ-RT-220, below -(2^53-1)
+  ratio: float64,   ; REQ-RT-210, NaN and infinities
+}
+
+; Integer map keys (REQ-RT-230, REQ-KEY-030/040).
+Counters = {
+  1: uint,
+  2: int,
+}

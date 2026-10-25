@@ -1,0 +1,14 @@
+; Every primitive type admitted by specs.md §3, one field each.
+Primitives = {
+  flag: bool,
+  signed: int,
+  unsigned: uint,
+  half: float16,
+  single: float32,
+  double: float64,
+  text: tstr,
+  bytes: bstr,
+}
+
+; `null` as a type in its own right; §8.1 maps it separately.
+Nothing = null
