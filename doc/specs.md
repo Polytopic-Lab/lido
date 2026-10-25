@@ -86,7 +86,11 @@ SHALL treat all other constructs as unsupported (see REQ-CDDL-050):
   elements and table entries.
 - Choice types (`A / B / C`) over named types, for mapping to tagged
   unions / sum types / enums.
-- Enumerations of literal values (e.g. `"red" / "green" / "blue"`).
+- Enumerations of literal values, of either text strings
+  (`"red" / "green" / "blue"`) or unsigned integers (`10 / 20 / 30`). A
+  single enumeration draws its literals from one of those two kinds and
+  not both; negative and floating-point literals are outside the v1
+  subset.
 - Nested and forward type references within the same schema document.
 - Comments and whitespace per RFC 8610 §2.
 - Basic numeric ranges (`x..y`) on integer and float types.
@@ -476,6 +480,25 @@ hashed or signed.
 - **REQ-RT-170** The runtime library SHALL produce byte-identical CBOR
   output for equal DTO instances, both across repeated runs and across
   target languages.
+- **REQ-RT-175** The runtime library SHALL emit JSON containing no
+  insignificant whitespace — no space, tab, or line break between
+  tokens — and WHEN decoding SHALL accept JSON containing arbitrary
+  insignificant whitespace as permitted by RFC 8259 §2. Without a fixed
+  emitted form the JSON half of the conformance suite (REQ-ARCH-060)
+  cannot be compared byte-exactly, and two runtime libraries could emit
+  visibly different documents while both being "correct".
+- **REQ-RT-177** The runtime library SHALL emit the members of a JSON
+  object in the canonical order REQ-RT-160/165 define for CBOR map keys —
+  bytewise over each key's *CBOR-encoded* form — so that a single
+  generation-time field order serves both encodings. Together with
+  REQ-RT-175 this gives JSON the property REQ-RT-170 gives CBOR: equal
+  DTO instances produce byte-identical JSON across repeated runs and
+  across target languages. Two consequences are called out because both
+  are easy to implement wrongly and hard to see in review: JSON member
+  order is length-first rather than alphabetical
+  (`{"age":…,"name":…,"email":…}`); and for integer-keyed maps the order
+  is numeric, which is *not* the lexicographic order of the decimal
+  member names REQ-KEY-030 produces — `"9"` precedes `"10"`.
 - **REQ-RT-180** The runtime library SHALL accept non-deterministically
   encoded CBOR input that is otherwise schema-valid (e.g. indefinite-
   length items, non-canonically ordered map keys), so that Lido peers
