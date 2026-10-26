@@ -1,0 +1,68 @@
+{
+  "$schema": "../../manifest.schema.json",
+  "manifest_version": 1,
+  "schema": "enum.cddl",
+  "kind": "positive",
+  "cases": [
+    {
+      "id": "enum/color_red",
+      "root": "Color",
+      "description": "text-literal enumeration value",
+      "requirements": ["REQ-RT-160", "REQ-RT-175", "REQ-RT-385"],
+      "derivation": "cbor2",
+      "value": {"tstr": "red"},
+      "cbor": "63726564",
+      "json": "\"red\""
+    },
+    {
+      "id": "enum/color_green",
+      "root": "Color",
+      "description": "text-literal enumeration value",
+      "requirements": ["REQ-RT-160", "REQ-RT-175", "REQ-RT-385"],
+      "derivation": "cbor2",
+      "value": {"tstr": "green"},
+      "cbor": "65677265656e",
+      "json": "\"green\""
+    },
+    {
+      "id": "enum/color_blue",
+      "root": "Color",
+      "description": "text-literal enumeration value",
+      "requirements": ["REQ-RT-160", "REQ-RT-175", "REQ-RT-385"],
+      "derivation": "cbor2",
+      "value": {"tstr": "blue"},
+      "cbor": "64626c7565",
+      "json": "\"blue\""
+    },
+    {
+      "id": "enum/status_10",
+      "root": "Status",
+      "description": "integer-literal enumeration: the literal 10 (0a), not ordinal 0",
+      "requirements": ["REQ-RT-160", "REQ-RT-175", "REQ-RT-385"],
+      "derivation": "cbor2",
+      "value": {"uint": "10"},
+      "cbor": "0a",
+      "json": "10"
+    },
+    {
+      "id": "enum/status_20",
+      "root": "Status",
+      "description": "the literal 20 (14), not ordinal 1",
+      "requirements": ["REQ-RT-160", "REQ-RT-175", "REQ-RT-385"],
+      "derivation": "cbor2",
+      "value": {"uint": "20"},
+      "cbor": "14",
+      "json": "20"
+    },
+    {
+      "id": "enum/status_30",
+      "root": "Status",
+      "description": "the literal 30 (181e) needs a 1-byte argument, not ordinal 2",
+      "requirements": ["REQ-RT-160", "REQ-RT-175", "REQ-RT-385"],
+      "derivation": "cbor2",
+      "value": {"uint": "30"},
+      "cbor": "181e",
+      "json": "30"
+    }
+  ]
+}

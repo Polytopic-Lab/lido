@@ -20,7 +20,7 @@ conformance/
 ├── construct-coverage.json   specs.md §3 construct -> schema
 ├── schemas/<name>.cddl       one construct group per file
 ├── cases/<kind>/<name>.json  one file per (schema, kind)
-└── tools/                    check_corpus.py, requirements.txt
+└── tools/                    check_corpus.py, cborcheck.py, test_cborcheck.py, requirements.txt
 ```
 
 `index.json` lists every file explicitly (`schemas` by file name, `cases`
@@ -97,12 +97,44 @@ when §3 does not state it. A construct with no schema must say where it is
 deferred (`deferred_to`). `check_corpus.py` fails if a §3 bullet is cited by
 no construct, a quote is not in `specs.md`, or a schema is missing.
 
+## How a case is verified
+
+`check_corpus.py` re-derives every expected value with tools that share no
+code with Lido (D-007 §4). For each positive case:
+
+1. `cbor2.loads(cbor)` equals `value` — type-strict, map pairs compared in
+   order, `-0.0` distinct from `0.0`;
+2. `cbor2.dumps(..., canonical=True)` of that result is byte-identical to
+   `cbor`;
+3. `cborcheck.py`, a standard-library validator written from RFC 8949 §4.2,
+   finds no violation: definite lengths, shortest heads and floats, canonical
+   NaN (REQ-RT-172), and map keys strictly increasing over their *encoded*
+   bytes (REQ-RT-165);
+4. `json` equals the text derived from `value` by the checker's own JSON
+   writer, which implements REQ-RT-175/177/178/179/200/220/230.
+
+It also checks that every schema has a positive case file, every `root` is
+defined in its schema, ids are unique, and every `requirements` entry exists
+in `specs.md`. It does **not** check that `value` is a valid instance of
+`root`: that needs a CDDL parser, which would be Lido code.
+
+`derivation` records provenance. `rfc8949-appendix-a` means the hex was
+transcribed from an RFC 8949 Appendix A item and the generator asserted
+equality with it; `cbor2` means `cbor2` produced the bytes; `hand-encoded`
+means they were written by hand. Whichever it is, checks 1–3 still apply.
+
+`--mutation-test` replaces every byte of every `cbor` with each of the other
+255 values, and every character of every `json` with a probe set (and
+deletes and doubles it), and requires the check to fail each time.
+
 ## Adding a case
 
 1. Pick the schema and the kind; open (or create) `cases/<kind>/<stem>.json`.
-2. Derive the bytes from RFC 8949 or by hand — not from Lido.
+2. Derive the bytes from RFC 8949, by hand, or with `cbor2` — never from
+   Lido. Write `value` first and let the check tell you if the bytes agree.
 3. Add the file to `index.json` if it is new.
-4. Run the check (below).
+4. Run the check (below). An existing case's expected values are never edited
+   to make an implementation pass.
 
 ## Checking
 
@@ -110,7 +142,8 @@ no construct, a quote is not in `specs.md`, or a schema is missing.
 pip install --require-hashes -r conformance/tools/requirements.txt
 python3 conformance/tools/check_corpus.py --check-format
 python3 conformance/tools/check_corpus.py --self-test
+python3 conformance/tools/check_corpus.py --mutation-test
 ```
 
-The `conformance` CI job runs both. It is not yet a required check; it
-becomes one when slice 1.2 adds vectors for it to verify.
+The `conformance` CI job runs all three, with no Rust toolchain involved. It
+is a required check (D-009).

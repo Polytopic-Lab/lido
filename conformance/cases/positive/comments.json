@@ -1,0 +1,28 @@
+{
+  "$schema": "../../manifest.schema.json",
+  "manifest_version": 1,
+  "schema": "comments.cddl",
+  "kind": "positive",
+  "cases": [
+    {
+      "id": "comments/without_tags",
+      "root": "Documented",
+      "description": "comments and blank lines in the schema do not appear on the wire",
+      "requirements": ["REQ-RT-160", "REQ-RT-165", "REQ-RT-175", "REQ-RT-177"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "id"}, {"uint": "1"}], [{"tstr": "title"}, {"tstr": "t"}]]},
+      "cbor": "a262696401657469746c656174",
+      "json": "{\"id\":1,\"title\":\"t\"}"
+    },
+    {
+      "id": "comments/with_tags",
+      "root": "Documented",
+      "description": "optional tags present",
+      "requirements": ["REQ-RT-160", "REQ-RT-165", "REQ-RT-175", "REQ-RT-177"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "id"}, {"uint": "1"}], [{"tstr": "tags"}, {"array": [{"tstr": "x"}, {"tstr": "y"}]}], [{"tstr": "title"}, {"tstr": "t"}]]},
+      "cbor": "a36269640164746167738261786179657469746c656174",
+      "json": "{\"id\":1,\"tags\":[\"x\",\"y\"],\"title\":\"t\"}"
+    }
+  ]
+}

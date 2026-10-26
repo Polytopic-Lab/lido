@@ -1,0 +1,48 @@
+{
+  "$schema": "../../manifest.schema.json",
+  "manifest_version": 1,
+  "schema": "table_uint.cddl",
+  "kind": "positive",
+  "cases": [
+    {
+      "id": "table_uint/empty_inventory",
+      "root": "Inventory",
+      "description": "empty table",
+      "requirements": ["REQ-KEY-030", "REQ-RT-160", "REQ-RT-175"],
+      "derivation": "cbor2",
+      "value": {"map": []},
+      "cbor": "a0",
+      "json": "{}"
+    },
+    {
+      "id": "table_uint/head_width_keys",
+      "root": "Inventory",
+      "description": "keys 1, 24, 256, 65536 straddle the CBOR head widths",
+      "requirements": ["REQ-KEY-030", "REQ-RT-160", "REQ-RT-165", "REQ-RT-175", "REQ-RT-177", "REQ-RT-230"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"uint": "1"}, {"map": [[{"tstr": "qty"}, {"uint": "1"}], [{"tstr": "label"}, {"tstr": "a"}]]}], [{"uint": "24"}, {"map": [[{"tstr": "qty"}, {"uint": "2"}], [{"tstr": "label"}, {"tstr": "b"}]]}], [{"uint": "256"}, {"map": [[{"tstr": "qty"}, {"uint": "3"}], [{"tstr": "label"}, {"tstr": "c"}]]}], [{"uint": "65536"}, {"map": [[{"tstr": "qty"}, {"uint": "4"}], [{"tstr": "label"}, {"tstr": "d"}]]}]]},
+      "cbor": "a401a26371747901656c6162656c61611818a26371747902656c6162656c6162190100a26371747903656c6162656c61631a00010000a26371747904656c6162656c6164",
+      "json": "{\"1\":{\"qty\":1,\"label\":\"a\"},\"24\":{\"qty\":2,\"label\":\"b\"},\"256\":{\"qty\":3,\"label\":\"c\"},\"65536\":{\"qty\":4,\"label\":\"d\"}}"
+    },
+    {
+      "id": "table_uint/warehouse_nested",
+      "root": "Warehouse",
+      "description": "a table nested in a struct",
+      "requirements": ["REQ-KEY-030", "REQ-RT-160", "REQ-RT-165", "REQ-RT-175", "REQ-RT-177"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "name"}, {"tstr": "north"}], [{"tstr": "stock"}, {"map": [[{"uint": "7"}, {"map": [[{"tstr": "qty"}, {"uint": "100"}], [{"tstr": "label"}, {"tstr": "bolt"}]]}]]}]]},
+      "cbor": "a2646e616d65656e6f7274686573746f636ba107a2637174791864656c6162656c64626f6c74",
+      "json": "{\"name\":\"north\",\"stock\":{\"7\":{\"qty\":100,\"label\":\"bolt\"}}}"
+    },
+    {
+      "id": "table_uint/warehouse_empty_stock",
+      "root": "Warehouse",
+      "description": "nested empty table",
+      "requirements": ["REQ-RT-160", "REQ-RT-165", "REQ-RT-175", "REQ-RT-177"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "name"}, {"tstr": "south"}], [{"tstr": "stock"}, {"map": []}]]},
+      "cbor": "a2646e616d6565736f7574686573746f636ba0",
+      "json": "{\"name\":\"south\",\"stock\":{}}"
+    }
+  ]
+}

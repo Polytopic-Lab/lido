@@ -11,3 +11,12 @@ Counters = {
   1: uint,
   2: int,
 }
+
+; Integer keys declared out of order, with a two-digit key: numeric order is
+; 2, 9, 10 but the lexicographic order of the member names is "10", "2", "9"
+; (REQ-RT-177).
+Wide = {
+  2: uint,
+  10: uint,
+  9: uint,
+}

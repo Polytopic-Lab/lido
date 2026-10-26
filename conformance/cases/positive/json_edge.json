@@ -1,0 +1,108 @@
+{
+  "$schema": "../../manifest.schema.json",
+  "manifest_version": 1,
+  "schema": "json_edge.cddl",
+  "kind": "positive",
+  "cases": [
+    {
+      "id": "json_edge/bstr_empty",
+      "root": "Edge",
+      "description": "empty bstr: \"\" in JSON",
+      "requirements": ["REQ-RT-160", "REQ-RT-165", "REQ-RT-175", "REQ-RT-177", "REQ-RT-178", "REQ-RT-200"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "big"}, {"uint": "0"}], [{"tstr": "blob"}, {"bstr": ""}], [{"tstr": "ratio"}, {"f64": "0"}], [{"tstr": "signed"}, {"int": "0"}]]},
+      "cbor": "a4636269670064626c6f624065726174696ff90000667369676e656400",
+      "json": "{\"big\":0,\"blob\":\"\",\"ratio\":0,\"signed\":0}"
+    },
+    {
+      "id": "json_edge/bstr_one_byte",
+      "root": "Edge",
+      "description": "1 byte: two base64url characters, no padding",
+      "requirements": ["REQ-RT-160", "REQ-RT-165", "REQ-RT-175", "REQ-RT-177", "REQ-RT-178", "REQ-RT-200"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "big"}, {"uint": "0"}], [{"tstr": "blob"}, {"bstr": "ff"}], [{"tstr": "ratio"}, {"f64": "0"}], [{"tstr": "signed"}, {"int": "0"}]]},
+      "cbor": "a4636269670064626c6f6241ff65726174696ff90000667369676e656400",
+      "json": "{\"big\":0,\"blob\":\"_w\",\"ratio\":0,\"signed\":0}"
+    },
+    {
+      "id": "json_edge/bstr_two_bytes",
+      "root": "Edge",
+      "description": "2 bytes: three base64url characters, no padding",
+      "requirements": ["REQ-RT-160", "REQ-RT-165", "REQ-RT-175", "REQ-RT-177", "REQ-RT-178", "REQ-RT-200"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "big"}, {"uint": "0"}], [{"tstr": "blob"}, {"bstr": "fbef"}], [{"tstr": "ratio"}, {"f64": "0"}], [{"tstr": "signed"}, {"int": "0"}]]},
+      "cbor": "a4636269670064626c6f6242fbef65726174696ff90000667369676e656400",
+      "json": "{\"big\":0,\"blob\":\"--8\",\"ratio\":0,\"signed\":0}"
+    },
+    {
+      "id": "json_edge/bstr_three_bytes",
+      "root": "Edge",
+      "description": "3 bytes: four base64url characters, uses - and _",
+      "requirements": ["REQ-RT-160", "REQ-RT-165", "REQ-RT-175", "REQ-RT-177", "REQ-RT-178", "REQ-RT-200"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "big"}, {"uint": "0"}], [{"tstr": "blob"}, {"bstr": "fbffbf"}], [{"tstr": "ratio"}, {"f64": "0"}], [{"tstr": "signed"}, {"int": "0"}]]},
+      "cbor": "a4636269670064626c6f6243fbffbf65726174696ff90000667369676e656400",
+      "json": "{\"big\":0,\"blob\":\"-_-_\",\"ratio\":0,\"signed\":0}"
+    },
+    {
+      "id": "json_edge/ints_at_2_53_minus_1",
+      "root": "Edge",
+      "description": "2^53-1 and -(2^53-1) are JSON numbers",
+      "requirements": ["REQ-RT-160", "REQ-RT-165", "REQ-RT-175", "REQ-RT-177", "REQ-RT-178", "REQ-RT-220"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "big"}, {"uint": "9007199254740991"}], [{"tstr": "blob"}, {"bstr": ""}], [{"tstr": "ratio"}, {"f64": "0"}], [{"tstr": "signed"}, {"int": "-9007199254740991"}]]},
+      "cbor": "a4636269671b001fffffffffffff64626c6f624065726174696ff90000667369676e65643b001ffffffffffffe",
+      "json": "{\"big\":9007199254740991,\"blob\":\"\",\"ratio\":0,\"signed\":-9007199254740991}"
+    },
+    {
+      "id": "json_edge/ints_at_2_53",
+      "root": "Edge",
+      "description": "2^53 and -2^53 are JSON strings",
+      "requirements": ["REQ-RT-160", "REQ-RT-165", "REQ-RT-175", "REQ-RT-177", "REQ-RT-178", "REQ-RT-220"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "big"}, {"uint": "9007199254740992"}], [{"tstr": "blob"}, {"bstr": ""}], [{"tstr": "ratio"}, {"f64": "0"}], [{"tstr": "signed"}, {"int": "-9007199254740992"}]]},
+      "cbor": "a4636269671b002000000000000064626c6f624065726174696ff90000667369676e65643b001fffffffffffff",
+      "json": "{\"big\":\"9007199254740992\",\"blob\":\"\",\"ratio\":0,\"signed\":\"-9007199254740992\"}"
+    },
+    {
+      "id": "json_edge/uint_max",
+      "root": "Edge",
+      "description": "2^64-1 is a JSON string",
+      "requirements": ["REQ-RT-160", "REQ-RT-165", "REQ-RT-175", "REQ-RT-177", "REQ-RT-178", "REQ-RT-220"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "big"}, {"uint": "18446744073709551615"}], [{"tstr": "blob"}, {"bstr": ""}], [{"tstr": "ratio"}, {"f64": "0"}], [{"tstr": "signed"}, {"int": "0"}]]},
+      "cbor": "a4636269671bffffffffffffffff64626c6f624065726174696ff90000667369676e656400",
+      "json": "{\"big\":\"18446744073709551615\",\"blob\":\"\",\"ratio\":0,\"signed\":0}"
+    },
+    {
+      "id": "json_edge/ratio_large",
+      "root": "Edge",
+      "description": "1.0e+300 (RFC 8949 Appendix A) in JSON exponent form",
+      "requirements": ["REQ-RT-160", "REQ-RT-165", "REQ-RT-175", "REQ-RT-177", "REQ-RT-178"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "big"}, {"uint": "0"}], [{"tstr": "blob"}, {"bstr": ""}], [{"tstr": "ratio"}, {"f64": "1e+300"}], [{"tstr": "signed"}, {"int": "0"}]]},
+      "cbor": "a4636269670064626c6f624065726174696ffb7e37e43c8800759c667369676e656400",
+      "json": "{\"big\":0,\"blob\":\"\",\"ratio\":1e+300,\"signed\":0}"
+    },
+    {
+      "id": "json_edge/counters_basic",
+      "root": "Counters",
+      "description": "integer keys 1 and 2",
+      "requirements": ["REQ-KEY-030", "REQ-RT-160", "REQ-RT-165", "REQ-RT-175", "REQ-RT-177", "REQ-RT-230"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"uint": "1"}, {"uint": "10"}], [{"uint": "2"}, {"int": "-10"}]]},
+      "cbor": "a2010a0229",
+      "json": "{\"1\":10,\"2\":-10}"
+    },
+    {
+      "id": "json_edge/wide_numeric_member_order",
+      "root": "Wide",
+      "description": "keys 2, 9, 10 declared 2, 10, 9: member order is \"2\",\"9\",\"10\", not the lexicographic \"10\",\"2\",\"9\"",
+      "requirements": ["REQ-KEY-030", "REQ-RT-160", "REQ-RT-165", "REQ-RT-175", "REQ-RT-177", "REQ-RT-230"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"uint": "2"}, {"uint": "2"}], [{"uint": "9"}, {"uint": "9"}], [{"uint": "10"}, {"uint": "10"}]]},
+      "cbor": "a3020209090a0a",
+      "json": "{\"2\":2,\"9\":9,\"10\":10}"
+    }
+  ]
+}

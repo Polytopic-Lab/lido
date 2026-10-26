@@ -1,0 +1,38 @@
+{
+  "$schema": "../../manifest.schema.json",
+  "manifest_version": 1,
+  "schema": "nested.cddl",
+  "kind": "positive",
+  "cases": [
+    {
+      "id": "nested/no_items",
+      "root": "Order",
+      "description": "empty items array",
+      "requirements": ["REQ-RT-160", "REQ-RT-165", "REQ-RT-175", "REQ-RT-177"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "id"}, {"uint": "1"}], [{"tstr": "items"}, {"array": []}]]},
+      "cbor": "a262696401656974656d7380",
+      "json": "{\"id\":1,\"items\":[]}"
+    },
+    {
+      "id": "nested/one_item",
+      "root": "Order",
+      "description": "three levels: order, item, price",
+      "requirements": ["REQ-RT-160", "REQ-RT-165", "REQ-RT-175", "REQ-RT-177"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "id"}, {"uint": "2"}], [{"tstr": "items"}, {"array": [{"map": [[{"tstr": "sku"}, {"tstr": "a1"}], [{"tstr": "price"}, {"map": [[{"tstr": "amount"}, {"uint": "250"}], [{"tstr": "currency"}, {"tstr": "EUR"}]]}]]}]}]]},
+      "cbor": "a262696402656974656d7381a263736b75626131657072696365a266616d6f756e7418fa6863757272656e637963455552",
+      "json": "{\"id\":2,\"items\":[{\"sku\":\"a1\",\"price\":{\"amount\":250,\"currency\":\"EUR\"}}]}"
+    },
+    {
+      "id": "nested/three_items",
+      "root": "Order",
+      "description": "three items, so items[2] exists",
+      "requirements": ["REQ-RT-160", "REQ-RT-165", "REQ-RT-175", "REQ-RT-177"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "id"}, {"uint": "3"}], [{"tstr": "items"}, {"array": [{"map": [[{"tstr": "sku"}, {"tstr": "a1"}], [{"tstr": "price"}, {"map": [[{"tstr": "amount"}, {"uint": "250"}], [{"tstr": "currency"}, {"tstr": "EUR"}]]}]]}, {"map": [[{"tstr": "sku"}, {"tstr": "b22"}], [{"tstr": "price"}, {"map": [[{"tstr": "amount"}, {"uint": "1"}], [{"tstr": "currency"}, {"tstr": "USD"}]]}]]}, {"map": [[{"tstr": "sku"}, {"tstr": "c333"}], [{"tstr": "price"}, {"map": [[{"tstr": "amount"}, {"uint": "99999"}], [{"tstr": "currency"}, {"tstr": "JPY"}]]}]]}]}]]},
+      "cbor": "a262696403656974656d7383a263736b75626131657072696365a266616d6f756e7418fa6863757272656e637963455552a263736b7563623232657072696365a266616d6f756e74016863757272656e637963555344a263736b756463333333657072696365a266616d6f756e741a0001869f6863757272656e6379634a5059",
+      "json": "{\"id\":3,\"items\":[{\"sku\":\"a1\",\"price\":{\"amount\":250,\"currency\":\"EUR\"}},{\"sku\":\"b22\",\"price\":{\"amount\":1,\"currency\":\"USD\"}},{\"sku\":\"c333\",\"price\":{\"amount\":99999,\"currency\":\"JPY\"}}]}"
+    }
+  ]
+}

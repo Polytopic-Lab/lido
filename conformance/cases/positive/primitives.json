@@ -1,0 +1,208 @@
+{
+  "$schema": "../../manifest.schema.json",
+  "manifest_version": 1,
+  "schema": "primitives.cddl",
+  "kind": "positive",
+  "cases": [
+    {
+      "id": "primitives/zero",
+      "root": "Primitives",
+      "description": "every field at its zero value",
+      "requirements": ["REQ-RT-160", "REQ-RT-165", "REQ-RT-175", "REQ-RT-177", "REQ-RT-178"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "flag"}, {"bool": false}], [{"tstr": "half"}, {"f16": "0"}], [{"tstr": "text"}, {"tstr": ""}], [{"tstr": "bytes"}, {"bstr": ""}], [{"tstr": "double"}, {"f64": "0"}], [{"tstr": "signed"}, {"int": "0"}], [{"tstr": "single"}, {"f32": "0"}], [{"tstr": "unsigned"}, {"uint": "0"}]]},
+      "cbor": "a864666c6167f46468616c66f900006474657874606562797465734066646f75626c65f90000667369676e6564006673696e676c65f9000068756e7369676e656400",
+      "json": "{\"flag\":false,\"half\":0,\"text\":\"\",\"bytes\":\"\",\"double\":0,\"signed\":0,\"single\":0,\"unsigned\":0}"
+    },
+    {
+      "id": "primitives/typical",
+      "root": "Primitives",
+      "description": "an ordinary value of each primitive; the eight keys sort flag, half, text, bytes, double, signed, single, unsigned (length-first, then bytewise: signed < single)",
+      "requirements": ["REQ-RT-160", "REQ-RT-165", "REQ-RT-175", "REQ-RT-177", "REQ-RT-178"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "flag"}, {"bool": true}], [{"tstr": "half"}, {"f16": "1"}], [{"tstr": "text"}, {"tstr": "IETF"}], [{"tstr": "bytes"}, {"bstr": "01020304"}], [{"tstr": "double"}, {"f64": "1.1"}], [{"tstr": "signed"}, {"int": "-100"}], [{"tstr": "single"}, {"f32": "100000"}], [{"tstr": "unsigned"}, {"uint": "1000"}]]},
+      "cbor": "a864666c6167f56468616c66f93c0064746578746449455446656279746573440102030466646f75626c65fb3ff199999999999a667369676e656438636673696e676c65fa47c3500068756e7369676e65641903e8",
+      "json": "{\"flag\":true,\"half\":1,\"text\":\"IETF\",\"bytes\":\"AQIDBA\",\"double\":1.1,\"signed\":-100,\"single\":100000,\"unsigned\":1000}"
+    },
+    {
+      "id": "primitives/unsigned_max",
+      "root": "Primitives",
+      "description": "uint at 2^64-1",
+      "requirements": ["REQ-RT-160", "REQ-RT-165", "REQ-RT-175", "REQ-RT-177", "REQ-RT-178"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "flag"}, {"bool": false}], [{"tstr": "half"}, {"f16": "0"}], [{"tstr": "text"}, {"tstr": ""}], [{"tstr": "bytes"}, {"bstr": ""}], [{"tstr": "double"}, {"f64": "0"}], [{"tstr": "signed"}, {"int": "0"}], [{"tstr": "single"}, {"f32": "0"}], [{"tstr": "unsigned"}, {"uint": "18446744073709551615"}]]},
+      "cbor": "a864666c6167f46468616c66f900006474657874606562797465734066646f75626c65f90000667369676e6564006673696e676c65f9000068756e7369676e65641bffffffffffffffff",
+      "json": "{\"flag\":false,\"half\":0,\"text\":\"\",\"bytes\":\"\",\"double\":0,\"signed\":0,\"single\":0,\"unsigned\":\"18446744073709551615\"}"
+    },
+    {
+      "id": "primitives/signed_min",
+      "root": "Primitives",
+      "description": "int at -2^63",
+      "requirements": ["REQ-RT-160", "REQ-RT-165", "REQ-RT-175", "REQ-RT-177", "REQ-RT-178"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "flag"}, {"bool": false}], [{"tstr": "half"}, {"f16": "0"}], [{"tstr": "text"}, {"tstr": ""}], [{"tstr": "bytes"}, {"bstr": ""}], [{"tstr": "double"}, {"f64": "0"}], [{"tstr": "signed"}, {"int": "-9223372036854775808"}], [{"tstr": "single"}, {"f32": "0"}], [{"tstr": "unsigned"}, {"uint": "0"}]]},
+      "cbor": "a864666c6167f46468616c66f900006474657874606562797465734066646f75626c65f90000667369676e65643b7fffffffffffffff6673696e676c65f9000068756e7369676e656400",
+      "json": "{\"flag\":false,\"half\":0,\"text\":\"\",\"bytes\":\"\",\"double\":0,\"signed\":\"-9223372036854775808\",\"single\":0,\"unsigned\":0}"
+    },
+    {
+      "id": "primitives/signed_max",
+      "root": "Primitives",
+      "description": "int at 2^63-1",
+      "requirements": ["REQ-RT-160", "REQ-RT-165", "REQ-RT-175", "REQ-RT-177", "REQ-RT-178"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "flag"}, {"bool": false}], [{"tstr": "half"}, {"f16": "0"}], [{"tstr": "text"}, {"tstr": ""}], [{"tstr": "bytes"}, {"bstr": ""}], [{"tstr": "double"}, {"f64": "0"}], [{"tstr": "signed"}, {"int": "9223372036854775807"}], [{"tstr": "single"}, {"f32": "0"}], [{"tstr": "unsigned"}, {"uint": "0"}]]},
+      "cbor": "a864666c6167f46468616c66f900006474657874606562797465734066646f75626c65f90000667369676e65641b7fffffffffffffff6673696e676c65f9000068756e7369676e656400",
+      "json": "{\"flag\":false,\"half\":0,\"text\":\"\",\"bytes\":\"\",\"double\":0,\"signed\":\"9223372036854775807\",\"single\":0,\"unsigned\":0}"
+    },
+    {
+      "id": "primitives/float_negative_zero",
+      "root": "Primitives",
+      "description": "-0.0 in every float field: f98000 each, written -0 in JSON",
+      "requirements": ["REQ-RT-160", "REQ-RT-165", "REQ-RT-175", "REQ-RT-177", "REQ-RT-178"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "flag"}, {"bool": false}], [{"tstr": "half"}, {"f16": "-0"}], [{"tstr": "text"}, {"tstr": ""}], [{"tstr": "bytes"}, {"bstr": ""}], [{"tstr": "double"}, {"f64": "-0"}], [{"tstr": "signed"}, {"int": "0"}], [{"tstr": "single"}, {"f32": "-0"}], [{"tstr": "unsigned"}, {"uint": "0"}]]},
+      "cbor": "a864666c6167f46468616c66f980006474657874606562797465734066646f75626c65f98000667369676e6564006673696e676c65f9800068756e7369676e656400",
+      "json": "{\"flag\":false,\"half\":-0,\"text\":\"\",\"bytes\":\"\",\"double\":-0,\"signed\":0,\"single\":-0,\"unsigned\":0}"
+    },
+    {
+      "id": "primitives/float_width_independent",
+      "root": "Primitives",
+      "description": "1.5 in float16, float32 and float64 fields encodes identically (shortest form, not declared width)",
+      "requirements": ["REQ-GEN-140", "REQ-RT-160", "REQ-RT-165", "REQ-RT-175", "REQ-RT-177", "REQ-RT-178"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "flag"}, {"bool": false}], [{"tstr": "half"}, {"f16": "1.5"}], [{"tstr": "text"}, {"tstr": ""}], [{"tstr": "bytes"}, {"bstr": ""}], [{"tstr": "double"}, {"f64": "1.5"}], [{"tstr": "signed"}, {"int": "0"}], [{"tstr": "single"}, {"f32": "1.5"}], [{"tstr": "unsigned"}, {"uint": "0"}]]},
+      "cbor": "a864666c6167f46468616c66f93e006474657874606562797465734066646f75626c65f93e00667369676e6564006673696e676c65f93e0068756e7369676e656400",
+      "json": "{\"flag\":false,\"half\":1.5,\"text\":\"\",\"bytes\":\"\",\"double\":1.5,\"signed\":0,\"single\":1.5,\"unsigned\":0}"
+    },
+    {
+      "id": "primitives/float_half_max",
+      "root": "Primitives",
+      "description": "65504, the largest finite half-precision value, in every float field",
+      "requirements": ["REQ-RT-160", "REQ-RT-165", "REQ-RT-175", "REQ-RT-177", "REQ-RT-178"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "flag"}, {"bool": false}], [{"tstr": "half"}, {"f16": "65504"}], [{"tstr": "text"}, {"tstr": ""}], [{"tstr": "bytes"}, {"bstr": ""}], [{"tstr": "double"}, {"f64": "65504"}], [{"tstr": "signed"}, {"int": "0"}], [{"tstr": "single"}, {"f32": "65504"}], [{"tstr": "unsigned"}, {"uint": "0"}]]},
+      "cbor": "a864666c6167f46468616c66f97bff6474657874606562797465734066646f75626c65f97bff667369676e6564006673696e676c65f97bff68756e7369676e656400",
+      "json": "{\"flag\":false,\"half\":65504,\"text\":\"\",\"bytes\":\"\",\"double\":65504,\"signed\":0,\"single\":65504,\"unsigned\":0}"
+    },
+    {
+      "id": "primitives/float_single_only",
+      "root": "Primitives",
+      "description": "100000.0 needs single precision (RFC 8949 Appendix A); a float64 field still gets the 4-byte form",
+      "requirements": ["REQ-RT-160", "REQ-RT-165", "REQ-RT-175", "REQ-RT-177", "REQ-RT-178"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "flag"}, {"bool": false}], [{"tstr": "half"}, {"f16": "0"}], [{"tstr": "text"}, {"tstr": ""}], [{"tstr": "bytes"}, {"bstr": ""}], [{"tstr": "double"}, {"f64": "100000"}], [{"tstr": "signed"}, {"int": "0"}], [{"tstr": "single"}, {"f32": "100000"}], [{"tstr": "unsigned"}, {"uint": "0"}]]},
+      "cbor": "a864666c6167f46468616c66f900006474657874606562797465734066646f75626c65fa47c35000667369676e6564006673696e676c65fa47c3500068756e7369676e656400",
+      "json": "{\"flag\":false,\"half\":0,\"text\":\"\",\"bytes\":\"\",\"double\":100000,\"signed\":0,\"single\":100000,\"unsigned\":0}"
+    },
+    {
+      "id": "primitives/float_double_only",
+      "root": "Primitives",
+      "description": "1.1 needs double precision (RFC 8949 Appendix A)",
+      "requirements": ["REQ-RT-160", "REQ-RT-165", "REQ-RT-175", "REQ-RT-177", "REQ-RT-178"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "flag"}, {"bool": false}], [{"tstr": "half"}, {"f16": "0"}], [{"tstr": "text"}, {"tstr": ""}], [{"tstr": "bytes"}, {"bstr": ""}], [{"tstr": "double"}, {"f64": "1.1"}], [{"tstr": "signed"}, {"int": "0"}], [{"tstr": "single"}, {"f32": "0"}], [{"tstr": "unsigned"}, {"uint": "0"}]]},
+      "cbor": "a864666c6167f46468616c66f900006474657874606562797465734066646f75626c65fb3ff199999999999a667369676e6564006673696e676c65f9000068756e7369676e656400",
+      "json": "{\"flag\":false,\"half\":0,\"text\":\"\",\"bytes\":\"\",\"double\":1.1,\"signed\":0,\"single\":0,\"unsigned\":0}"
+    },
+    {
+      "id": "primitives/float_single_max",
+      "root": "Primitives",
+      "description": "the largest float32, 3.4028234663852886e+38; JSON digits differ by held width",
+      "requirements": ["REQ-RT-160", "REQ-RT-165", "REQ-RT-175", "REQ-RT-177", "REQ-RT-178"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "flag"}, {"bool": false}], [{"tstr": "half"}, {"f16": "0"}], [{"tstr": "text"}, {"tstr": ""}], [{"tstr": "bytes"}, {"bstr": ""}], [{"tstr": "double"}, {"f64": "3.4028234663852886e+38"}], [{"tstr": "signed"}, {"int": "0"}], [{"tstr": "single"}, {"f32": "3.4028234663852886e+38"}], [{"tstr": "unsigned"}, {"uint": "0"}]]},
+      "cbor": "a864666c6167f46468616c66f900006474657874606562797465734066646f75626c65fa7f7fffff667369676e6564006673696e676c65fa7f7fffff68756e7369676e656400",
+      "json": "{\"flag\":false,\"half\":0,\"text\":\"\",\"bytes\":\"\",\"double\":3.4028234663852886e+38,\"signed\":0,\"single\":3.4028235e+38,\"unsigned\":0}"
+    },
+    {
+      "id": "primitives/float_half_subnormal",
+      "root": "Primitives",
+      "description": "the smallest half-precision subnormal, 2^-24 (f90001); JSON shows 5.9604645e-8 for the 32-bit-held fields and 5.960464477539063e-8 for float64",
+      "requirements": ["REQ-RT-160", "REQ-RT-165", "REQ-RT-175", "REQ-RT-177", "REQ-RT-178"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "flag"}, {"bool": false}], [{"tstr": "half"}, {"f16": "5.960464477539063e-8"}], [{"tstr": "text"}, {"tstr": ""}], [{"tstr": "bytes"}, {"bstr": ""}], [{"tstr": "double"}, {"f64": "5.960464477539063e-8"}], [{"tstr": "signed"}, {"int": "0"}], [{"tstr": "single"}, {"f32": "5.960464477539063e-8"}], [{"tstr": "unsigned"}, {"uint": "0"}]]},
+      "cbor": "a864666c6167f46468616c66f900016474657874606562797465734066646f75626c65f90001667369676e6564006673696e676c65f9000168756e7369676e656400",
+      "json": "{\"flag\":false,\"half\":5.9604645e-8,\"text\":\"\",\"bytes\":\"\",\"double\":5.960464477539063e-8,\"signed\":0,\"single\":5.9604645e-8,\"unsigned\":0}"
+    },
+    {
+      "id": "primitives/float_exponent_layout_large",
+      "root": "Primitives",
+      "description": "1e21 switches to exponent form in JSON (1e+21)",
+      "requirements": ["REQ-RT-160", "REQ-RT-165", "REQ-RT-175", "REQ-RT-177", "REQ-RT-178"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "flag"}, {"bool": false}], [{"tstr": "half"}, {"f16": "0"}], [{"tstr": "text"}, {"tstr": ""}], [{"tstr": "bytes"}, {"bstr": ""}], [{"tstr": "double"}, {"f64": "1e+21"}], [{"tstr": "signed"}, {"int": "0"}], [{"tstr": "single"}, {"f32": "0"}], [{"tstr": "unsigned"}, {"uint": "0"}]]},
+      "cbor": "a864666c6167f46468616c66f900006474657874606562797465734066646f75626c65fb444b1ae4d6e2ef50667369676e6564006673696e676c65f9000068756e7369676e656400",
+      "json": "{\"flag\":false,\"half\":0,\"text\":\"\",\"bytes\":\"\",\"double\":1e+21,\"signed\":0,\"single\":0,\"unsigned\":0}"
+    },
+    {
+      "id": "primitives/float_decimal_layout_small",
+      "root": "Primitives",
+      "description": "1e-6 stays decimal in JSON: 0.000001",
+      "requirements": ["REQ-RT-160", "REQ-RT-165", "REQ-RT-175", "REQ-RT-177", "REQ-RT-178"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "flag"}, {"bool": false}], [{"tstr": "half"}, {"f16": "0"}], [{"tstr": "text"}, {"tstr": ""}], [{"tstr": "bytes"}, {"bstr": ""}], [{"tstr": "double"}, {"f64": "1e-06"}], [{"tstr": "signed"}, {"int": "0"}], [{"tstr": "single"}, {"f32": "0"}], [{"tstr": "unsigned"}, {"uint": "0"}]]},
+      "cbor": "a864666c6167f46468616c66f900006474657874606562797465734066646f75626c65fb3eb0c6f7a0b5ed8d667369676e6564006673696e676c65f9000068756e7369676e656400",
+      "json": "{\"flag\":false,\"half\":0,\"text\":\"\",\"bytes\":\"\",\"double\":0.000001,\"signed\":0,\"single\":0,\"unsigned\":0}"
+    },
+    {
+      "id": "primitives/float_exponent_layout_small",
+      "root": "Primitives",
+      "description": "1.2345e-7 uses exponent form in JSON",
+      "requirements": ["REQ-RT-160", "REQ-RT-165", "REQ-RT-175", "REQ-RT-177", "REQ-RT-178"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "flag"}, {"bool": false}], [{"tstr": "half"}, {"f16": "0"}], [{"tstr": "text"}, {"tstr": ""}], [{"tstr": "bytes"}, {"bstr": ""}], [{"tstr": "double"}, {"f64": "1.2345e-7"}], [{"tstr": "signed"}, {"int": "0"}], [{"tstr": "single"}, {"f32": "0"}], [{"tstr": "unsigned"}, {"uint": "0"}]]},
+      "cbor": "a864666c6167f46468616c66f900006474657874606562797465734066646f75626c65fb3e8091b5aeffdb8e667369676e6564006673696e676c65f9000068756e7369676e656400",
+      "json": "{\"flag\":false,\"half\":0,\"text\":\"\",\"bytes\":\"\",\"double\":1.2345e-7,\"signed\":0,\"single\":0,\"unsigned\":0}"
+    },
+    {
+      "id": "primitives/float_integral_below_1e21",
+      "root": "Primitives",
+      "description": "an integral float below 1e21 is written without fraction or exponent",
+      "requirements": ["REQ-RT-160", "REQ-RT-165", "REQ-RT-175", "REQ-RT-177", "REQ-RT-178"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "flag"}, {"bool": false}], [{"tstr": "half"}, {"f16": "0"}], [{"tstr": "text"}, {"tstr": ""}], [{"tstr": "bytes"}, {"bstr": ""}], [{"tstr": "double"}, {"f64": "100000000000000000000"}], [{"tstr": "signed"}, {"int": "0"}], [{"tstr": "single"}, {"f32": "0"}], [{"tstr": "unsigned"}, {"uint": "0"}]]},
+      "cbor": "a864666c6167f46468616c66f900006474657874606562797465734066646f75626c65fb4415af1d78b58c40667369676e6564006673696e676c65f9000068756e7369676e656400",
+      "json": "{\"flag\":false,\"half\":0,\"text\":\"\",\"bytes\":\"\",\"double\":100000000000000000000,\"signed\":0,\"single\":0,\"unsigned\":0}"
+    },
+    {
+      "id": "primitives/text_unicode",
+      "root": "Primitives",
+      "description": "multi-byte UTF-8: U+00FC, U+6C34, U+10151 (RFC 8949 Appendix A strings); JSON writes them raw",
+      "requirements": ["REQ-RT-160", "REQ-RT-165", "REQ-RT-175", "REQ-RT-177", "REQ-RT-178", "REQ-RT-179"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "flag"}, {"bool": false}], [{"tstr": "half"}, {"f16": "0"}], [{"tstr": "text"}, {"tstr": "ü水𐅑"}], [{"tstr": "bytes"}, {"bstr": ""}], [{"tstr": "double"}, {"f64": "0"}], [{"tstr": "signed"}, {"int": "0"}], [{"tstr": "single"}, {"f32": "0"}], [{"tstr": "unsigned"}, {"uint": "0"}]]},
+      "cbor": "a864666c6167f46468616c66f90000647465787469c3bce6b0b4f09085916562797465734066646f75626c65f90000667369676e6564006673696e676c65f9000068756e7369676e656400",
+      "json": "{\"flag\":false,\"half\":0,\"text\":\"ü水𐅑\",\"bytes\":\"\",\"double\":0,\"signed\":0,\"single\":0,\"unsigned\":0}"
+    },
+    {
+      "id": "primitives/text_escapes",
+      "root": "Primitives",
+      "description": "quote, backslash, newline, U+0001, U+001F are escaped in JSON; slash, DEL and space are not",
+      "requirements": ["REQ-RT-160", "REQ-RT-165", "REQ-RT-175", "REQ-RT-177", "REQ-RT-178", "REQ-RT-179"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "flag"}, {"bool": false}], [{"tstr": "half"}, {"f16": "0"}], [{"tstr": "text"}, {"tstr": "a\"b\\c/\n\u0001\u001f\u007f d"}], [{"tstr": "bytes"}, {"bstr": ""}], [{"tstr": "double"}, {"f64": "0"}], [{"tstr": "signed"}, {"int": "0"}], [{"tstr": "single"}, {"f32": "0"}], [{"tstr": "unsigned"}, {"uint": "0"}]]},
+      "cbor": "a864666c6167f46468616c66f9000064746578746c6122625c632f0a011f7f20646562797465734066646f75626c65f90000667369676e6564006673696e676c65f9000068756e7369676e656400",
+      "json": "{\"flag\":false,\"half\":0,\"text\":\"a\\\"b\\\\c/\\n\\u0001\\u001f\u007f d\",\"bytes\":\"\",\"double\":0,\"signed\":0,\"single\":0,\"unsigned\":0}"
+    },
+    {
+      "id": "primitives/bytes_nonempty",
+      "root": "Primitives",
+      "description": "a 3-byte bstr using both base64url-specific characters",
+      "requirements": ["REQ-RT-160", "REQ-RT-165", "REQ-RT-175", "REQ-RT-177", "REQ-RT-178", "REQ-RT-200"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "flag"}, {"bool": false}], [{"tstr": "half"}, {"f16": "0"}], [{"tstr": "text"}, {"tstr": ""}], [{"tstr": "bytes"}, {"bstr": "fbffbf"}], [{"tstr": "double"}, {"f64": "0"}], [{"tstr": "signed"}, {"int": "0"}], [{"tstr": "single"}, {"f32": "0"}], [{"tstr": "unsigned"}, {"uint": "0"}]]},
+      "cbor": "a864666c6167f46468616c66f9000064746578746065627974657343fbffbf66646f75626c65f90000667369676e6564006673696e676c65f9000068756e7369676e656400",
+      "json": "{\"flag\":false,\"half\":0,\"text\":\"\",\"bytes\":\"-_-_\",\"double\":0,\"signed\":0,\"single\":0,\"unsigned\":0}"
+    },
+    {
+      "id": "primitives/nothing",
+      "root": "Nothing",
+      "description": "the standalone null type: f6 (RFC 8949 Appendix A)",
+      "requirements": ["REQ-RT-160", "REQ-RT-175"],
+      "derivation": "rfc8949-appendix-a",
+      "value": {"null": null},
+      "cbor": "f6",
+      "json": "null"
+    }
+  ]
+}

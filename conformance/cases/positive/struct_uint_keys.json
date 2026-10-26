@@ -1,0 +1,48 @@
+{
+  "$schema": "../../manifest.schema.json",
+  "manifest_version": 1,
+  "schema": "struct_uint_keys.cddl",
+  "kind": "positive",
+  "cases": [
+    {
+      "id": "struct_uint_keys/declared_out_of_order",
+      "root": "Header",
+      "description": "declared 9, 1, 2; wire and JSON order is 1, 2, 9",
+      "requirements": ["REQ-KEY-030", "REQ-KEY-050", "REQ-RT-160", "REQ-RT-165", "REQ-RT-175", "REQ-RT-177", "REQ-RT-230"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"uint": "1"}, {"int": "7"}], [{"uint": "2"}, {"bstr": "0102"}], [{"uint": "9"}, {"tstr": "x"}]]},
+      "cbor": "a3010702420102096178",
+      "json": "{\"1\":7,\"2\":\"AQI\",\"9\":\"x\"}"
+    },
+    {
+      "id": "struct_uint_keys/negative_int",
+      "root": "Header",
+      "description": "negative int under key 1",
+      "requirements": ["REQ-KEY-030", "REQ-RT-160", "REQ-RT-165", "REQ-RT-175", "REQ-RT-177"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"uint": "1"}, {"int": "-1000"}], [{"uint": "2"}, {"bstr": ""}], [{"uint": "9"}, {"tstr": ""}]]},
+      "cbor": "a3013903e702400960",
+      "json": "{\"1\":-1000,\"2\":\"\",\"9\":\"\"}"
+    },
+    {
+      "id": "struct_uint_keys/bstr_value",
+      "root": "Header",
+      "description": "a longer bstr under key 2",
+      "requirements": ["REQ-RT-160", "REQ-RT-165", "REQ-RT-175", "REQ-RT-177", "REQ-RT-200"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"uint": "1"}, {"int": "0"}], [{"uint": "2"}, {"bstr": "00ff10ef"}], [{"uint": "9"}, {"tstr": "kid"}]]},
+      "cbor": "a30100024400ff10ef09636b6964",
+      "json": "{\"1\":0,\"2\":\"AP8Q7w\",\"9\":\"kid\"}"
+    },
+    {
+      "id": "struct_uint_keys/int_extremes",
+      "root": "Header",
+      "description": "int at 2^63-1 is a JSON string",
+      "requirements": ["REQ-RT-160", "REQ-RT-165", "REQ-RT-175", "REQ-RT-177", "REQ-RT-220"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"uint": "1"}, {"int": "9223372036854775807"}], [{"uint": "2"}, {"bstr": ""}], [{"uint": "9"}, {"tstr": "m"}]]},
+      "cbor": "a3011b7fffffffffffffff024009616d",
+      "json": "{\"1\":\"9223372036854775807\",\"2\":\"\",\"9\":\"m\"}"
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "$schema": "../../manifest.schema.json",
+  "manifest_version": 1,
+  "schema": "forward_ref.cddl",
+  "kind": "positive",
+  "cases": [
+    {
+      "id": "forward_ref/basic",
+      "root": "Envelope",
+      "description": "Envelope refers to Body, defined below it",
+      "requirements": ["REQ-RT-160", "REQ-RT-175"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "body"}, {"map": [[{"tstr": "text"}, {"tstr": "hello"}]]}]]},
+      "cbor": "a164626f6479a164746578746568656c6c6f",
+      "json": "{\"body\":{\"text\":\"hello\"}}"
+    }
+  ]
+}

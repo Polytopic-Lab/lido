@@ -1,0 +1,58 @@
+{
+  "$schema": "../../manifest.schema.json",
+  "manifest_version": 1,
+  "schema": "recursive.cddl",
+  "kind": "positive",
+  "cases": [
+    {
+      "id": "recursive/node_single",
+      "root": "Node",
+      "description": "optional edge absent",
+      "requirements": ["REQ-RT-160", "REQ-RT-175"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "value"}, {"int": "1"}]]},
+      "cbor": "a16576616c756501",
+      "json": "{\"value\":1}"
+    },
+    {
+      "id": "recursive/node_chain",
+      "root": "Node",
+      "description": "three nodes linked through the optional edge",
+      "requirements": ["REQ-RT-160", "REQ-RT-165", "REQ-RT-175", "REQ-RT-177"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "next"}, {"map": [[{"tstr": "next"}, {"map": [[{"tstr": "value"}, {"int": "-3"}]]}], [{"tstr": "value"}, {"int": "2"}]]}], [{"tstr": "value"}, {"int": "1"}]]},
+      "cbor": "a2646e657874a2646e657874a16576616c7565226576616c7565026576616c756501",
+      "json": "{\"next\":{\"next\":{\"value\":-3},\"value\":2},\"value\":1}"
+    },
+    {
+      "id": "recursive/tree_leaf",
+      "root": "Tree",
+      "description": "array edge empty",
+      "requirements": ["REQ-RT-160", "REQ-RT-165", "REQ-RT-175", "REQ-RT-177"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "label"}, {"tstr": "leaf"}], [{"tstr": "children"}, {"array": []}]]},
+      "cbor": "a2656c6162656c646c656166686368696c6472656e80",
+      "json": "{\"label\":\"leaf\",\"children\":[]}"
+    },
+    {
+      "id": "recursive/tree_two_levels",
+      "root": "Tree",
+      "description": "one child",
+      "requirements": ["REQ-RT-160", "REQ-RT-165", "REQ-RT-175", "REQ-RT-177"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "label"}, {"tstr": "root"}], [{"tstr": "children"}, {"array": [{"map": [[{"tstr": "label"}, {"tstr": "a"}], [{"tstr": "children"}, {"array": []}]]}]}]]},
+      "cbor": "a2656c6162656c64726f6f74686368696c6472656e81a2656c6162656c6161686368696c6472656e80",
+      "json": "{\"label\":\"root\",\"children\":[{\"label\":\"a\",\"children\":[]}]}"
+    },
+    {
+      "id": "recursive/tree_mixed",
+      "root": "Tree",
+      "description": "three levels with empty and non-empty children",
+      "requirements": ["REQ-RT-160", "REQ-RT-165", "REQ-RT-175", "REQ-RT-177"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "label"}, {"tstr": "root"}], [{"tstr": "children"}, {"array": [{"map": [[{"tstr": "label"}, {"tstr": "a"}], [{"tstr": "children"}, {"array": [{"map": [[{"tstr": "label"}, {"tstr": "a1"}], [{"tstr": "children"}, {"array": []}]]}, {"map": [[{"tstr": "label"}, {"tstr": "a2"}], [{"tstr": "children"}, {"array": []}]]}]}]]}, {"map": [[{"tstr": "label"}, {"tstr": "b"}], [{"tstr": "children"}, {"array": []}]]}]}]]},
+      "cbor": "a2656c6162656c64726f6f74686368696c6472656e82a2656c6162656c6161686368696c6472656e82a2656c6162656c626131686368696c6472656e80a2656c6162656c626132686368696c6472656e80a2656c6162656c6162686368696c6472656e80",
+      "json": "{\"label\":\"root\",\"children\":[{\"label\":\"a\",\"children\":[{\"label\":\"a1\",\"children\":[]},{\"label\":\"a2\",\"children\":[]}]},{\"label\":\"b\",\"children\":[]}]}"
+    }
+  ]
+}

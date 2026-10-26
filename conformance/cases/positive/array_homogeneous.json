@@ -1,0 +1,68 @@
+{
+  "$schema": "../../manifest.schema.json",
+  "manifest_version": 1,
+  "schema": "array_homogeneous.cddl",
+  "kind": "positive",
+  "cases": [
+    {
+      "id": "array_homogeneous/numbers_empty",
+      "root": "Numbers",
+      "description": "empty array: 80 (RFC 8949 Appendix A)",
+      "requirements": ["REQ-RT-160", "REQ-RT-175"],
+      "derivation": "rfc8949-appendix-a",
+      "value": {"array": []},
+      "cbor": "80",
+      "json": "[]"
+    },
+    {
+      "id": "array_homogeneous/numbers_one_two_three",
+      "root": "Numbers",
+      "description": "[1, 2, 3] (RFC 8949 Appendix A)",
+      "requirements": ["REQ-RT-160", "REQ-RT-175"],
+      "derivation": "rfc8949-appendix-a",
+      "value": {"array": [{"int": "1"}, {"int": "2"}, {"int": "3"}]},
+      "cbor": "83010203",
+      "json": "[1,2,3]"
+    },
+    {
+      "id": "array_homogeneous/numbers_one_to_25",
+      "root": "Numbers",
+      "description": "[1..25]: the array head itself moves to the 1-byte-argument form (RFC 8949 Appendix A)",
+      "requirements": ["REQ-RT-160", "REQ-RT-175"],
+      "derivation": "rfc8949-appendix-a",
+      "value": {"array": [{"int": "1"}, {"int": "2"}, {"int": "3"}, {"int": "4"}, {"int": "5"}, {"int": "6"}, {"int": "7"}, {"int": "8"}, {"int": "9"}, {"int": "10"}, {"int": "11"}, {"int": "12"}, {"int": "13"}, {"int": "14"}, {"int": "15"}, {"int": "16"}, {"int": "17"}, {"int": "18"}, {"int": "19"}, {"int": "20"}, {"int": "21"}, {"int": "22"}, {"int": "23"}, {"int": "24"}, {"int": "25"}]},
+      "cbor": "98190102030405060708090a0b0c0d0e0f101112131415161718181819",
+      "json": "[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25]"
+    },
+    {
+      "id": "array_homogeneous/numbers_head_width_boundaries",
+      "root": "Numbers",
+      "description": "every integer head-width boundary, both signs",
+      "requirements": ["REQ-RT-160", "REQ-RT-175", "REQ-RT-220"],
+      "derivation": "cbor2",
+      "value": {"array": [{"int": "0"}, {"int": "23"}, {"int": "24"}, {"int": "255"}, {"int": "256"}, {"int": "65535"}, {"int": "65536"}, {"int": "4294967295"}, {"int": "4294967296"}, {"int": "9223372036854775807"}, {"int": "-1"}, {"int": "-24"}, {"int": "-25"}, {"int": "-256"}, {"int": "-257"}, {"int": "-65536"}, {"int": "-65537"}, {"int": "-4294967296"}, {"int": "-4294967297"}, {"int": "-9223372036854775808"}]},
+      "cbor": "940017181818ff19010019ffff1a000100001affffffff1b00000001000000001b7fffffffffffffff2037381838ff39010039ffff3a000100003affffffff3b00000001000000003b7fffffffffffffff",
+      "json": "[0,23,24,255,256,65535,65536,4294967295,4294967296,\"9223372036854775807\",-1,-24,-25,-256,-257,-65536,-65537,-4294967296,-4294967297,\"-9223372036854775808\"]"
+    },
+    {
+      "id": "array_homogeneous/polyline_empty",
+      "root": "Polyline",
+      "description": "empty array of structs",
+      "requirements": ["REQ-RT-160", "REQ-RT-175"],
+      "derivation": "cbor2",
+      "value": {"array": []},
+      "cbor": "80",
+      "json": "[]"
+    },
+    {
+      "id": "array_homogeneous/polyline_three_points",
+      "root": "Polyline",
+      "description": "three structs",
+      "requirements": ["REQ-RT-160", "REQ-RT-165", "REQ-RT-175", "REQ-RT-177"],
+      "derivation": "cbor2",
+      "value": {"array": [{"map": [[{"tstr": "x"}, {"int": "0"}], [{"tstr": "y"}, {"int": "0"}]]}, {"map": [[{"tstr": "x"}, {"int": "1"}], [{"tstr": "y"}, {"int": "-1"}]]}, {"map": [[{"tstr": "x"}, {"int": "-2"}], [{"tstr": "y"}, {"int": "3"}]]}]},
+      "cbor": "83a2617800617900a2617801617920a2617821617903",
+      "json": "[{\"x\":0,\"y\":0},{\"x\":1,\"y\":-1},{\"x\":-2,\"y\":3}]"
+    }
+  ]
+}

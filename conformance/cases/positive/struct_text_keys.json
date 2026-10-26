@@ -19,6 +19,36 @@
       },
       "cbor": "a3636167651824646e616d656341646165656d61696c656140622e63",
       "json": "{\"age\":36,\"name\":\"Ada\",\"email\":\"a@b.c\"}"
+    },
+    {
+      "id": "struct_text_keys/optional_absent",
+      "root": "Person",
+      "description": "optional email absent: its key is omitted and the map has two entries",
+      "requirements": ["REQ-RT-160", "REQ-RT-165", "REQ-RT-175", "REQ-RT-177", "REQ-RT-320", "REQ-RT-340"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "age"}, {"uint": "36"}], [{"tstr": "name"}, {"tstr": "Ada"}]]},
+      "cbor": "a2636167651824646e616d6563416461",
+      "json": "{\"age\":36,\"name\":\"Ada\"}"
+    },
+    {
+      "id": "struct_text_keys/unicode",
+      "root": "Person",
+      "description": "non-ASCII text in values",
+      "requirements": ["REQ-RT-160", "REQ-RT-165", "REQ-RT-175", "REQ-RT-177", "REQ-RT-179"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "age"}, {"uint": "41"}], [{"tstr": "name"}, {"tstr": "Zoë 水"}], [{"tstr": "email"}, {"tstr": "ü@水.example"}]]},
+      "cbor": "a3636167651829646e616d65685a6fc3ab20e6b0b465656d61696c6ec3bc40e6b0b42e6578616d706c65",
+      "json": "{\"age\":41,\"name\":\"Zoë 水\",\"email\":\"ü@水.example\"}"
+    },
+    {
+      "id": "struct_text_keys/empty_strings",
+      "root": "Person",
+      "description": "empty name and a present-but-empty email",
+      "requirements": ["REQ-RT-160", "REQ-RT-165", "REQ-RT-175", "REQ-RT-177", "REQ-RT-320"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "age"}, {"uint": "0"}], [{"tstr": "name"}, {"tstr": ""}], [{"tstr": "email"}, {"tstr": ""}]]},
+      "cbor": "a36361676500646e616d656065656d61696c60",
+      "json": "{\"age\":0,\"name\":\"\",\"email\":\"\"}"
     }
   ]
 }

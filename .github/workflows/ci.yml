@@ -56,8 +56,8 @@ jobs:
           command: check licenses bans sources
 
   # Corpus self-check (D-007 §4). Linux only, on the runner's system
-  # Python — no setup-python. Not a required check until slice 1.2 gives it
-  # teeth; promoting it means editing branch protection and D-006's list.
+  # Python — no setup-python. No Rust, cargo or rustup step: the oracle runs
+  # with zero Lido code (slice 1.2 DoD). Required from slice 1.2 (D-009).
   conformance:
     runs-on: ubuntu-24.04
     steps:
@@ -68,6 +68,7 @@ jobs:
           .venv/bin/pip install --require-hashes -r conformance/tools/requirements.txt
       - run: .venv/bin/python conformance/tools/check_corpus.py --check-format
       - run: .venv/bin/python conformance/tools/check_corpus.py --self-test
+      - run: .venv/bin/python conformance/tools/check_corpus.py --mutation-test
 
   # Not a required check. The advisories database changes independently of
   # this repo, so gating every unrelated PR on it would make DoD clause 1
