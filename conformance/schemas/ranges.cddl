@@ -1,0 +1,10 @@
+; Numeric ranges. 0..255 coincides with nothing the mapped type enforces
+; (REQ-RT-260 / REQ-GEN-130).
+Byte = 0..255
+Percent = 0.0..100.0
+
+Reading = {
+  level: Byte,
+  ratio: Percent,
+  temp: -40..125,
+}

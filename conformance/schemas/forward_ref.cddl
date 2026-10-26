@@ -1,0 +1,8 @@
+; `Body` is used before it is defined (REQ-CDDL-020).
+Envelope = {
+  body: Body,
+}
+
+Body = {
+  text: tstr,
+}

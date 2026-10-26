@@ -1,0 +1,24 @@
+{
+  "$schema": "../../manifest.schema.json",
+  "manifest_version": 1,
+  "schema": "struct_text_keys.cddl",
+  "kind": "positive",
+  "cases": [
+    {
+      "id": "struct_text_keys/basic",
+      "root": "Person",
+      "description": "three text keys whose canonical order is length-first: age, name, email",
+      "requirements": ["REQ-RT-160", "REQ-RT-165", "REQ-RT-175", "REQ-RT-177"],
+      "derivation": "hand-encoded",
+      "value": {
+        "map": [
+          [{ "tstr": "age" }, { "uint": "36" }],
+          [{ "tstr": "name" }, { "tstr": "Ada" }],
+          [{ "tstr": "email" }, { "tstr": "a@b.c" }]
+        ]
+      },
+      "cbor": "a3636167651824646e616d656341646165656d61696c656140622e63",
+      "json": "{\"age\":36,\"name\":\"Ada\",\"email\":\"a@b.c\"}"
+    }
+  ]
+}

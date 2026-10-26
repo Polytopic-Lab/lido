@@ -1,0 +1,16 @@
+; Three levels of nesting, so a decode error path such as
+; `order.items[3].price` (REQ-RT-065) has something to be produced from.
+Price = {
+  amount: uint,
+  currency: tstr,
+}
+
+Item = {
+  sku: tstr,
+  price: Price,
+}
+
+Order = {
+  id: uint,
+  items: [* Item],
+}

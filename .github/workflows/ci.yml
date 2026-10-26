@@ -55,6 +55,20 @@ jobs:
           rust-version: "1.97.1"
           command: check licenses bans sources
 
+  # Corpus self-check (D-007 §4). Linux only, on the runner's system
+  # Python — no setup-python. Not a required check until slice 1.2 gives it
+  # teeth; promoting it means editing branch protection and D-006's list.
+  conformance:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install pinned tooling
+        run: |
+          python3 -m venv .venv
+          .venv/bin/pip install --require-hashes -r conformance/tools/requirements.txt
+      - run: .venv/bin/python conformance/tools/check_corpus.py --check-format
+      - run: .venv/bin/python conformance/tools/check_corpus.py --self-test
+
   # Not a required check. The advisories database changes independently of
   # this repo, so gating every unrelated PR on it would make DoD clause 1
   # ("CI is green") depend on the outside world — slice 0.2 plan §4 Q3.

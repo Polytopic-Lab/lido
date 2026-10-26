@@ -1,0 +1,286 @@
+{
+  "manifest_version": 1,
+  "constructs": [
+    {
+      "id": "C-010",
+      "construct": "type definition",
+      "quote": "Type definitions (`name = ...`)",
+      "schemas": [
+        "array_fixed",
+        "array_homogeneous",
+        "choice",
+        "comments",
+        "enum",
+        "forward_ref",
+        "json_edge",
+        "nested",
+        "optional_default",
+        "primitives",
+        "ranges",
+        "recursive",
+        "struct_text_keys",
+        "struct_uint_keys",
+        "table_tstr",
+        "table_uint"
+      ]
+    },
+    {
+      "id": "C-011",
+      "construct": "named type reference",
+      "quote": "named type references",
+      "schemas": [
+        "struct_text_keys",
+        "nested"
+      ]
+    },
+    {
+      "id": "C-020",
+      "construct": "struct, text keys",
+      "quote": "Keys MAY be text strings (`{ name: tstr }`)",
+      "schemas": [
+        "struct_text_keys"
+      ]
+    },
+    {
+      "id": "C-021",
+      "construct": "struct, unsigned-integer keys",
+      "quote": "unsigned integers (`{ 1: tstr }`, COSE-style compact encoding)",
+      "schemas": [
+        "struct_uint_keys"
+      ]
+    },
+    {
+      "id": "C-030",
+      "construct": "table, tstr key",
+      "quote": "(`{ * tstr => int }`)",
+      "schemas": [
+        "table_tstr"
+      ]
+    },
+    {
+      "id": "C-031",
+      "construct": "table, uint key",
+      "quote": "the key type is `tstr` or `uint`",
+      "schemas": [
+        "table_uint"
+      ]
+    },
+    {
+      "id": "C-040",
+      "construct": "homogeneous array",
+      "quote": "homogeneous",
+      "schemas": [
+        "array_homogeneous"
+      ]
+    },
+    {
+      "id": "C-041",
+      "construct": "fixed-shape heterogeneous array",
+      "quote": "fixed-shape heterogeneous lists",
+      "schemas": [
+        "array_fixed"
+      ]
+    },
+    {
+      "id": "C-050",
+      "construct": "primitive type bool",
+      "quote": "Primitive types: `bool`, `int`, `uint`, `float16/32/64`, `tstr`, `bstr`, `null`.",
+      "schemas": [
+        "primitives"
+      ]
+    },
+    {
+      "id": "C-051",
+      "construct": "primitive type int",
+      "quote": "Primitive types: `bool`, `int`, `uint`, `float16/32/64`, `tstr`, `bstr`, `null`.",
+      "schemas": [
+        "primitives"
+      ]
+    },
+    {
+      "id": "C-052",
+      "construct": "primitive type uint",
+      "quote": "Primitive types: `bool`, `int`, `uint`, `float16/32/64`, `tstr`, `bstr`, `null`.",
+      "schemas": [
+        "primitives"
+      ]
+    },
+    {
+      "id": "C-053",
+      "construct": "primitive type float16",
+      "quote": "Primitive types: `bool`, `int`, `uint`, `float16/32/64`, `tstr`, `bstr`, `null`.",
+      "schemas": [
+        "primitives"
+      ]
+    },
+    {
+      "id": "C-054",
+      "construct": "primitive type float32",
+      "quote": "Primitive types: `bool`, `int`, `uint`, `float16/32/64`, `tstr`, `bstr`, `null`.",
+      "schemas": [
+        "primitives"
+      ]
+    },
+    {
+      "id": "C-055",
+      "construct": "primitive type float64",
+      "quote": "Primitive types: `bool`, `int`, `uint`, `float16/32/64`, `tstr`, `bstr`, `null`.",
+      "schemas": [
+        "primitives"
+      ]
+    },
+    {
+      "id": "C-056",
+      "construct": "primitive type tstr",
+      "quote": "Primitive types: `bool`, `int`, `uint`, `float16/32/64`, `tstr`, `bstr`, `null`.",
+      "schemas": [
+        "primitives"
+      ]
+    },
+    {
+      "id": "C-057",
+      "construct": "primitive type bstr",
+      "quote": "Primitive types: `bool`, `int`, `uint`, `float16/32/64`, `tstr`, `bstr`, `null`.",
+      "schemas": [
+        "primitives"
+      ]
+    },
+    {
+      "id": "C-058",
+      "construct": "primitive type null",
+      "quote": "Primitive types: `bool`, `int`, `uint`, `float16/32/64`, `tstr`, `bstr`, `null`.",
+      "schemas": [
+        "primitives"
+      ]
+    },
+    {
+      "id": "C-060",
+      "construct": "optional field `?`",
+      "quote": "Optional fields (`?`)",
+      "schemas": [
+        "optional_default",
+        "struct_text_keys"
+      ]
+    },
+    {
+      "id": "C-061",
+      "construct": "`.default` control operator",
+      "quote": "`.default` control operator",
+      "schemas": [
+        "optional_default"
+      ]
+    },
+    {
+      "id": "C-070",
+      "construct": "occurrence `?` on array elements",
+      "quote": "Simple occurrence indicators `?` (0 or 1) and `*` (0 or more) on array elements and table entries.",
+      "schemas": [
+        "array_fixed"
+      ]
+    },
+    {
+      "id": "C-071",
+      "construct": "occurrence `*` on array elements",
+      "quote": "Simple occurrence indicators `?` (0 or 1) and `*` (0 or more) on array elements and table entries.",
+      "schemas": [
+        "array_homogeneous"
+      ]
+    },
+    {
+      "id": "C-072",
+      "construct": "occurrence `*` on table entries",
+      "quote": "Simple occurrence indicators `?` (0 or 1) and `*` (0 or more) on array elements and table entries.",
+      "schemas": [
+        "table_tstr",
+        "table_uint"
+      ]
+    },
+    {
+      "id": "C-080",
+      "construct": "choice over named types",
+      "quote": "Choice types (`A / B / C`) over named types",
+      "schemas": [
+        "choice"
+      ]
+    },
+    {
+      "id": "C-090",
+      "construct": "enumeration of text literals",
+      "quote": "text strings (`\"red\" / \"green\" / \"blue\"`)",
+      "schemas": [
+        "enum"
+      ]
+    },
+    {
+      "id": "C-091",
+      "construct": "enumeration of integer literals (D-008)",
+      "quote": "unsigned integers (`10 / 20 / 30`)",
+      "schemas": [
+        "enum"
+      ]
+    },
+    {
+      "id": "C-100",
+      "construct": "nested type reference",
+      "quote": "Nested and forward type references within the same schema document.",
+      "schemas": [
+        "nested"
+      ]
+    },
+    {
+      "id": "C-101",
+      "construct": "forward type reference",
+      "quote": "Nested and forward type references within the same schema document.",
+      "schemas": [
+        "forward_ref"
+      ]
+    },
+    {
+      "id": "C-102",
+      "construct": "recursive type reference (breakable)",
+      "derives_from": "REQ-CDDL-090",
+      "schemas": [
+        "recursive"
+      ]
+    },
+    {
+      "id": "C-110",
+      "construct": "comments",
+      "quote": "Comments and whitespace per RFC 8610 \u00a72.",
+      "schemas": [
+        "comments"
+      ]
+    },
+    {
+      "id": "C-111",
+      "construct": "whitespace",
+      "quote": "Comments and whitespace per RFC 8610 \u00a72.",
+      "schemas": [
+        "comments"
+      ]
+    },
+    {
+      "id": "C-120",
+      "construct": "numeric range, integer",
+      "quote": "Basic numeric ranges (`x..y`) on integer and float types.",
+      "schemas": [
+        "ranges"
+      ]
+    },
+    {
+      "id": "C-121",
+      "construct": "numeric range, float",
+      "quote": "Basic numeric ranges (`x..y`) on integer and float types.",
+      "schemas": [
+        "ranges"
+      ]
+    },
+    {
+      "id": "C-130",
+      "construct": "no map mixes text and integer keys",
+      "derives_from": "REQ-KEY-020",
+      "deferred_to": "Phase 3: parser rejection case under crates/lido-cddl/tests/ (D-007 \u00a71)",
+      "schemas": []
+    }
+  ]
+}

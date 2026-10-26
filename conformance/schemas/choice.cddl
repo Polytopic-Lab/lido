@@ -1,0 +1,18 @@
+; Choice over named types. The alternatives share an optional field
+; `name`, so a value's shape alone does not identify its alternative.
+Shape = Circle / Square / Label
+
+Circle = {
+  radius: uint,
+  ? name: tstr,
+}
+
+Square = {
+  side: uint,
+  ? name: tstr,
+}
+
+Label = {
+  text: tstr,
+  ? name: tstr,
+}

@@ -1,0 +1,8 @@
+; Text-keyed struct. The keys are chosen so that canonical order
+; (length-first, REQ-RT-165) is age, name, email — which is neither
+; declaration order nor alphabetical order.
+Person = {
+  name: tstr,
+  age: uint,
+  ? email: tstr,
+}

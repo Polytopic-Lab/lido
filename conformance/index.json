@@ -1,0 +1,24 @@
+{
+  "manifest_version": 1,
+  "schemas": [
+    "array_fixed.cddl",
+    "array_homogeneous.cddl",
+    "choice.cddl",
+    "comments.cddl",
+    "enum.cddl",
+    "forward_ref.cddl",
+    "json_edge.cddl",
+    "nested.cddl",
+    "optional_default.cddl",
+    "primitives.cddl",
+    "ranges.cddl",
+    "recursive.cddl",
+    "struct_text_keys.cddl",
+    "struct_uint_keys.cddl",
+    "table_tstr.cddl",
+    "table_uint.cddl"
+  ],
+  "cases": [
+    "cases/positive/struct_text_keys.json"
+  ]
+}

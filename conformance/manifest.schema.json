@@ -1,0 +1,184 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Polytopic-Lab/lido/conformance/manifest.schema.json",
+  "title": "Lido conformance case file",
+  "description": "One file per (schema, kind). See conformance/README.md and D-007.",
+  "type": "object",
+  "required": ["manifest_version", "schema", "kind", "cases"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "manifest_version": { "const": 1 },
+    "schema": {
+      "description": "File name of the CDDL schema under schemas/.",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*\\.cddl$"
+    },
+    "kind": { "enum": ["positive", "negative", "noncanonical", "evolution"] },
+    "cases": { "type": "array", "minItems": 1 }
+  },
+  "additionalProperties": false,
+  "if": { "properties": { "kind": { "const": "positive" } } },
+  "then": {
+    "properties": { "cases": { "items": { "$ref": "#/$defs/positiveCase" } } }
+  },
+  "else": {
+    "$comment": "negative, noncanonical and evolution records are defined by slices 1.3 and 1.4; until then no case may take those shapes.",
+    "properties": { "cases": false }
+  },
+  "$defs": {
+    "positiveCase": {
+      "type": "object",
+      "required": [
+        "id",
+        "root",
+        "description",
+        "requirements",
+        "derivation",
+        "value",
+        "cbor",
+        "json"
+      ],
+      "properties": {
+        "id": {
+          "description": "<schema-stem>/<case-name>, lower snake_case. Stable for the life of the project.",
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*/[a-z][a-z0-9_]*$"
+        },
+        "root": {
+          "description": "Name of the type in the schema that value is an instance of.",
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_]*$"
+        },
+        "description": { "type": "string", "minLength": 1 },
+        "requirements": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "pattern": "^REQ-[A-Z]+-[0-9]{3}$" }
+        },
+        "derivation": {
+          "enum": ["rfc8949-appendix-a", "hand-encoded", "cbor2"]
+        },
+        "value": { "$ref": "#/$defs/value" },
+        "cbor": {
+          "description": "Canonical CBOR (REQ-RT-160), lowercase hex, no prefix or separators.",
+          "type": "string",
+          "pattern": "^([0-9a-f]{2})+$"
+        },
+        "json": {
+          "description": "Exact expected JSON text, compact (REQ-RT-175), members in canonical order (REQ-RT-177).",
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "value": {
+      "description": "Self-describing logical value: an object with exactly one member, a type tag.",
+      "oneOf": [
+        { "$ref": "#/$defs/tagBool" },
+        { "$ref": "#/$defs/tagUint" },
+        { "$ref": "#/$defs/tagInt" },
+        { "$ref": "#/$defs/tagF16" },
+        { "$ref": "#/$defs/tagF32" },
+        { "$ref": "#/$defs/tagF64" },
+        { "$ref": "#/$defs/tagTstr" },
+        { "$ref": "#/$defs/tagBstr" },
+        { "$ref": "#/$defs/tagNull" },
+        { "$ref": "#/$defs/tagArray" },
+        { "$ref": "#/$defs/tagMap" }
+      ]
+    },
+    "tagBool": {
+      "type": "object",
+      "required": ["bool"],
+      "properties": { "bool": { "type": "boolean" } },
+      "additionalProperties": false
+    },
+    "tagUint": {
+      "type": "object",
+      "required": ["uint"],
+      "properties": { "uint": { "$ref": "#/$defs/uintString" } },
+      "additionalProperties": false
+    },
+    "tagInt": {
+      "type": "object",
+      "required": ["int"],
+      "properties": { "int": { "$ref": "#/$defs/intString" } },
+      "additionalProperties": false
+    },
+    "tagF16": {
+      "type": "object",
+      "required": ["f16"],
+      "properties": { "f16": { "$ref": "#/$defs/floatString" } },
+      "additionalProperties": false
+    },
+    "tagF32": {
+      "type": "object",
+      "required": ["f32"],
+      "properties": { "f32": { "$ref": "#/$defs/floatString" } },
+      "additionalProperties": false
+    },
+    "tagF64": {
+      "type": "object",
+      "required": ["f64"],
+      "properties": { "f64": { "$ref": "#/$defs/floatString" } },
+      "additionalProperties": false
+    },
+    "tagTstr": {
+      "type": "object",
+      "required": ["tstr"],
+      "properties": { "tstr": { "type": "string" } },
+      "additionalProperties": false
+    },
+    "tagBstr": {
+      "type": "object",
+      "required": ["bstr"],
+      "properties": {
+        "bstr": { "type": "string", "pattern": "^([0-9a-f]{2})*$" }
+      },
+      "additionalProperties": false
+    },
+    "tagNull": {
+      "type": "object",
+      "required": ["null"],
+      "properties": { "null": { "type": "null" } },
+      "additionalProperties": false
+    },
+    "tagArray": {
+      "type": "object",
+      "required": ["array"],
+      "properties": {
+        "array": { "type": "array", "items": { "$ref": "#/$defs/value" } }
+      },
+      "additionalProperties": false
+    },
+    "tagMap": {
+      "type": "object",
+      "required": ["map"],
+      "properties": {
+        "map": {
+          "description": "[key, value] pairs in expected wire order. Keys are tstr or uint.",
+          "type": "array",
+          "items": {
+            "type": "array",
+            "prefixItems": [
+              { "oneOf": [{ "$ref": "#/$defs/tagTstr" }, { "$ref": "#/$defs/tagUint" }] },
+              { "$ref": "#/$defs/value" }
+            ],
+            "minItems": 2,
+            "maxItems": 2
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "uintString": { "type": "string", "pattern": "^(0|[1-9][0-9]*)$" },
+    "intString": { "type": "string", "pattern": "^(0|-?[1-9][0-9]*)$" },
+    "floatString": {
+      "description": "Decimal, C99 hex-float, NaN, Infinity or -Infinity.",
+      "type": "string",
+      "pattern": "^(NaN|-?Infinity|-?0x[0-9a-fA-F]+(\\.[0-9a-fA-F]*)?p[+-]?[0-9]+|-?[0-9]+(\\.[0-9]+)?([eE][+-]?[0-9]+)?)$"
+    }
+  }
+}
