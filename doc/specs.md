@@ -480,6 +480,15 @@ hashed or signed.
 - **REQ-RT-170** The runtime library SHALL produce byte-identical CBOR
   output for equal DTO instances, both across repeated runs and across
   target languages.
+- **REQ-RT-172** WHEN encoding a NaN to CBOR, the runtime library SHALL
+  emit the half-precision quiet NaN `0xf97e00`, regardless of the
+  source value's sign or payload, and WHEN decoding SHALL accept any
+  NaN encoding. RFC 8949 §4.2 does not fix a canonical NaN, and
+  REQ-RT-160's "shortest form that round-trips" cannot, because NaN
+  payloads are not preserved across widths; without this rule three
+  runtimes could emit three NaN encodings for equal DTO instances,
+  contrary to REQ-RT-170. The infinities need no rule of their own: they
+  have a unique shortest form (`0xf97c00`, `0xf9fc00`).
 - **REQ-RT-175** The runtime library SHALL emit JSON containing no
   insignificant whitespace — no space, tab, or line break between
   tokens — and WHEN decoding SHALL accept JSON containing arbitrary
@@ -499,6 +508,38 @@ hashed or signed.
   (`{"age":…,"name":…,"email":…}`); and for integer-keyed maps the order
   is numeric, which is *not* the lexicographic order of the decimal
   member names REQ-KEY-030 produces — `"9"` precedes `"10"`.
+- **REQ-RT-178** WHEN encoding a `float16`, `float32`, or `float64`
+  value to JSON, the runtime library SHALL write it as a JSON number
+  using the shortest decimal digit sequence that reads back as exactly
+  the same value, laid out as ECMAScript `Number::toString` lays out a
+  double (as adopted by RFC 8785 §3.2.2.3): no fraction or exponent for
+  an integral value with magnitude below 10^21 (so `1.0` is written
+  `1`), no leading zeros, a lowercase `e` with an explicit sign for an
+  exponent (`1e+21`, `5e-7`), and decimal notation for magnitudes from
+  10^-6 up to 10^21. "Reads back as exactly the same value" is
+  evaluated at the field's *held* width: `float16` and `float32` fields
+  (both held as 32-bit floats, §8.1) use the shortest digits that round-
+  trip as a 32-bit float (`3.4028235e+38`, not its double expansion),
+  and `float64` fields those that round-trip as a 64-bit float.
+  Negative zero SHALL be written `-0`, where RFC 8785 would write `0`,
+  so the sign survives. WHEN decoding a JSON number into a float field
+  the runtime library SHALL accept any number permitted by RFC 8259 §6
+  and round it to the nearest value of the field's width. Floats are
+  never written as JSON strings; REQ-RT-220's string form applies only
+  to integer types. The default float printers of the three target
+  languages disagree (`1.0E300`, `1e+300`, `1.0e300`), so without this
+  rule the JSON half of the conformance suite (REQ-ARCH-060) could not
+  be compared byte-exactly.
+- **REQ-RT-179** WHEN encoding a string to JSON — a `tstr` value or an
+  object member name — the runtime library SHALL escape only the
+  quotation mark (`\"`), the reverse solidus (`\\`), and the characters
+  U+0000 to U+001F, using the short forms `\b`, `\f`, `\n`, `\r`, `\t`
+  where RFC 8259 §7 defines them and otherwise `\u` followed by four
+  lowercase hexadecimal digits; every other character, including all
+  non-ASCII characters and U+007F, SHALL be written as raw UTF-8, and
+  `/` SHALL NOT be escaped. WHEN decoding, the runtime library SHALL
+  accept every escape form RFC 8259 §7 permits. As with REQ-RT-175, a
+  fixed emitted form is what makes byte-exact comparison possible.
 - **REQ-RT-180** The runtime library SHALL accept non-deterministically
   encoded CBOR input that is otherwise schema-valid (e.g. indefinite-
   length items, non-canonically ordered map keys), so that Lido peers
