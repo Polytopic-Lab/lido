@@ -148,7 +148,10 @@ optional. Author non-canonical but valid inputs that decoders must
 accept: indefinite lengths, unsorted keys.
 
 **Requirements.** REQ-RT-300, REQ-RT-310, REQ-RT-315, REQ-RT-380,
-REQ-RT-240, REQ-RT-350, REQ-RT-180.
+REQ-RT-240, REQ-RT-350, REQ-RT-180; plus the encode-error and decode-only
+vectors deferred from 1.2 (one record-shape decision for all of them):
+REQ-RT-080, REQ-RT-210, REQ-RT-250, REQ-RT-255, and the decode halves of
+REQ-RT-175, REQ-RT-178, REQ-RT-179, REQ-RT-200, REQ-RT-220.
 
 **DoD.** Every negative vector is classified as either *malformed CBOR*
 or *well-formed but schema-invalid*, and the self-check confirms the
