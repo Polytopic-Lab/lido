@@ -15,3 +15,4 @@ PROJECT_NOTES.md
 
 # Python venv for conformance tooling
 .venv/
+__pycache__/

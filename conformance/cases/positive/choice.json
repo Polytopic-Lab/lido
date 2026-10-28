@@ -1,0 +1,68 @@
+{
+  "$schema": "../../manifest.schema.json",
+  "manifest_version": 1,
+  "schema": "choice.cddl",
+  "kind": "positive",
+  "cases": [
+    {
+      "id": "choice/circle",
+      "root": "Shape",
+      "description": "Circle alternative: a single-entry map keyed by the type name",
+      "requirements": ["REQ-RT-160", "REQ-RT-175", "REQ-RT-360", "REQ-RT-370"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "Circle"}, {"map": [[{"tstr": "radius"}, {"uint": "5"}]]}]]},
+      "cbor": "a166436972636c65a16672616469757305",
+      "json": "{\"Circle\":{\"radius\":5}}"
+    },
+    {
+      "id": "choice/circle_named",
+      "root": "Shape",
+      "description": "Circle carrying the optional name shared with the other alternatives",
+      "requirements": ["REQ-RT-160", "REQ-RT-165", "REQ-RT-175", "REQ-RT-177", "REQ-RT-360", "REQ-RT-370"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "Circle"}, {"map": [[{"tstr": "name"}, {"tstr": "c"}], [{"tstr": "radius"}, {"uint": "5"}]]}]]},
+      "cbor": "a166436972636c65a2646e616d6561636672616469757305",
+      "json": "{\"Circle\":{\"name\":\"c\",\"radius\":5}}"
+    },
+    {
+      "id": "choice/square",
+      "root": "Shape",
+      "description": "Square alternative",
+      "requirements": ["REQ-RT-160", "REQ-RT-175", "REQ-RT-360", "REQ-RT-370"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "Square"}, {"map": [[{"tstr": "side"}, {"uint": "2"}]]}]]},
+      "cbor": "a166537175617265a1647369646502",
+      "json": "{\"Square\":{\"side\":2}}"
+    },
+    {
+      "id": "choice/square_named",
+      "root": "Shape",
+      "description": "Square carrying name",
+      "requirements": ["REQ-RT-160", "REQ-RT-165", "REQ-RT-175", "REQ-RT-177", "REQ-RT-360", "REQ-RT-370"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "Square"}, {"map": [[{"tstr": "name"}, {"tstr": "s"}], [{"tstr": "side"}, {"uint": "2"}]]}]]},
+      "cbor": "a166537175617265a2646e616d656173647369646502",
+      "json": "{\"Square\":{\"name\":\"s\",\"side\":2}}"
+    },
+    {
+      "id": "choice/label",
+      "root": "Shape",
+      "description": "Label alternative",
+      "requirements": ["REQ-RT-160", "REQ-RT-175", "REQ-RT-360", "REQ-RT-370"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "Label"}, {"map": [[{"tstr": "text"}, {"tstr": "t"}]]}]]},
+      "cbor": "a1654c6162656ca164746578746174",
+      "json": "{\"Label\":{\"text\":\"t\"}}"
+    },
+    {
+      "id": "choice/label_named",
+      "root": "Shape",
+      "description": "Label carrying name",
+      "requirements": ["REQ-RT-160", "REQ-RT-165", "REQ-RT-175", "REQ-RT-177", "REQ-RT-360", "REQ-RT-370"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "Label"}, {"map": [[{"tstr": "name"}, {"tstr": "n"}], [{"tstr": "text"}, {"tstr": "t"}]]}]]},
+      "cbor": "a1654c6162656ca2646e616d65616e64746578746174",
+      "json": "{\"Label\":{\"name\":\"n\",\"text\":\"t\"}}"
+    }
+  ]
+}

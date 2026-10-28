@@ -584,3 +584,30 @@ Consequences:
   it merged before slice 1.1 branched, which is also why slice 1.2 can
   author vectors against a rule the spec states rather than one only the
   corpus knows.
+
+## D-009 — The `conformance` job is a required check
+Date: 2026-10-25 · Closes: D-007 Consequences; slice 1.2 plan §5 Q8 · Phase: 1
+
+Decision: from slice 1.2, the `conformance` job in `.github/workflows/ci.yml`
+is a required status check on `main`, added to D-006 part 4's list. It runs
+`check_corpus.py` in `--check-format`, `--self-test` and `--mutation-test`
+modes on the runner's system Python, with no Rust, `cargo`, or `rustup`
+step — the corpus verification involves zero Lido code. Branch protection
+is edited by hand (add `conformance`; not strict), after the job has
+reported once on the slice 1.2 PR, since a check cannot be required before
+it exists. Until that edit, the requirement is not in force.
+
+Alternatives: leaving it non-required (rejected — D-007 said it becomes
+required when it has teeth, and 1.2 supplies them: every expected byte is
+mutation-tested); requiring only the check-format and self-test modes
+(rejected — the mutation test is the DoD's second clause, and about 20
+seconds of CI).
+
+Rationale: the corpus is the project's ground truth (development.md §3.3);
+a check that can fail only matters if a merge can be blocked by it.
+
+Consequences: D-006's list of required checks now has nine entries, and
+renaming the job or its modes means editing branch protection by hand.
+Each later slice that adds corpus content (1.3, 1.4) is held to the same
+gate. This entry does not supersede D-006; it extends part 4's list, as
+D-006 itself says that list does not update on its own.

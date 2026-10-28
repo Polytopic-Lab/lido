@@ -1,0 +1,38 @@
+{
+  "$schema": "../../manifest.schema.json",
+  "manifest_version": 1,
+  "schema": "ranges.cddl",
+  "kind": "positive",
+  "cases": [
+    {
+      "id": "ranges/lower_bounds",
+      "root": "Reading",
+      "description": "every ranged field at its lower bound",
+      "requirements": ["REQ-RT-160", "REQ-RT-165", "REQ-RT-175", "REQ-RT-177", "REQ-RT-178", "REQ-RT-240", "REQ-RT-250"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "temp"}, {"int": "-40"}], [{"tstr": "level"}, {"uint": "0"}], [{"tstr": "ratio"}, {"f64": "0"}]]},
+      "cbor": "a36474656d703827656c6576656c0065726174696ff90000",
+      "json": "{\"temp\":-40,\"level\":0,\"ratio\":0}"
+    },
+    {
+      "id": "ranges/upper_bounds",
+      "root": "Reading",
+      "description": "every ranged field at its upper bound",
+      "requirements": ["REQ-RT-160", "REQ-RT-165", "REQ-RT-175", "REQ-RT-177", "REQ-RT-178", "REQ-RT-240", "REQ-RT-250"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "temp"}, {"int": "125"}], [{"tstr": "level"}, {"uint": "255"}], [{"tstr": "ratio"}, {"f64": "100"}]]},
+      "cbor": "a36474656d70187d656c6576656c18ff65726174696ff95640",
+      "json": "{\"temp\":125,\"level\":255,\"ratio\":100}"
+    },
+    {
+      "id": "ranges/inside",
+      "root": "Reading",
+      "description": "values strictly inside the ranges",
+      "requirements": ["REQ-RT-160", "REQ-RT-165", "REQ-RT-175", "REQ-RT-177", "REQ-RT-178", "REQ-RT-240", "REQ-RT-250"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "temp"}, {"int": "20"}], [{"tstr": "level"}, {"uint": "128"}], [{"tstr": "ratio"}, {"f64": "50.5"}]]},
+      "cbor": "a36474656d7014656c6576656c188065726174696ff95250",
+      "json": "{\"temp\":20,\"level\":128,\"ratio\":50.5}"
+    }
+  ]
+}

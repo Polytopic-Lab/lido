@@ -1,0 +1,78 @@
+{
+  "$schema": "../../manifest.schema.json",
+  "manifest_version": 1,
+  "schema": "optional_default.cddl",
+  "kind": "positive",
+  "cases": [
+    {
+      "id": "optional_default/all_absent",
+      "root": "Settings",
+      "description": "every field absent: empty map",
+      "requirements": ["REQ-RT-160", "REQ-RT-175", "REQ-RT-320"],
+      "derivation": "cbor2",
+      "value": {"map": []},
+      "cbor": "a0",
+      "json": "{}"
+    },
+    {
+      "id": "optional_default/retries_equal_default",
+      "root": "Settings",
+      "description": "retries equals its default 3 and is still written",
+      "requirements": ["REQ-RT-160", "REQ-RT-175", "REQ-RT-190"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "retries"}, {"uint": "3"}]]},
+      "cbor": "a1677265747269657303",
+      "json": "{\"retries\":3}"
+    },
+    {
+      "id": "optional_default/retries_other",
+      "root": "Settings",
+      "description": "retries differs from the default",
+      "requirements": ["REQ-RT-160", "REQ-RT-175"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "retries"}, {"uint": "5"}]]},
+      "cbor": "a1677265747269657305",
+      "json": "{\"retries\":5}"
+    },
+    {
+      "id": "optional_default/note_absent",
+      "root": "Settings",
+      "description": "note absent while another field is present",
+      "requirements": ["REQ-RT-160", "REQ-RT-175", "REQ-RT-320"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "nickname"}, {"tstr": "n"}]]},
+      "cbor": "a1686e69636b6e616d65616e",
+      "json": "{\"nickname\":\"n\"}"
+    },
+    {
+      "id": "optional_default/note_null",
+      "root": "Settings",
+      "description": "note present with the null alternative: key written with f6",
+      "requirements": ["REQ-RT-160", "REQ-RT-175", "REQ-RT-330"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "note"}, {"null": null}]]},
+      "cbor": "a1646e6f7465f6",
+      "json": "{\"note\":null}"
+    },
+    {
+      "id": "optional_default/note_text",
+      "root": "Settings",
+      "description": "note present with the text alternative",
+      "requirements": ["REQ-RT-160", "REQ-RT-175", "REQ-RT-330"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "note"}, {"tstr": "hi"}]]},
+      "cbor": "a1646e6f7465626869",
+      "json": "{\"note\":\"hi\"}"
+    },
+    {
+      "id": "optional_default/all_present",
+      "root": "Settings",
+      "description": "every field present",
+      "requirements": ["REQ-RT-160", "REQ-RT-165", "REQ-RT-175", "REQ-RT-177", "REQ-RT-190", "REQ-RT-330"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "note"}, {"null": null}], [{"tstr": "retries"}, {"uint": "0"}], [{"tstr": "nickname"}, {"tstr": "ada"}]]},
+      "cbor": "a3646e6f7465f6677265747269657300686e69636b6e616d6563616461",
+      "json": "{\"note\":null,\"retries\":0,\"nickname\":\"ada\"}"
+    }
+  ]
+}

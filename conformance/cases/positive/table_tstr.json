@@ -1,0 +1,48 @@
+{
+  "$schema": "../../manifest.schema.json",
+  "manifest_version": 1,
+  "schema": "table_tstr.cddl",
+  "kind": "positive",
+  "cases": [
+    {
+      "id": "table_tstr/empty",
+      "root": "Scores",
+      "description": "empty table: a0 (RFC 8949 Appendix A)",
+      "requirements": ["REQ-RT-160", "REQ-RT-175"],
+      "derivation": "rfc8949-appendix-a",
+      "value": {"map": []},
+      "cbor": "a0",
+      "json": "{}"
+    },
+    {
+      "id": "table_tstr/one_entry",
+      "root": "Scores",
+      "description": "a single entry",
+      "requirements": ["REQ-RT-160", "REQ-RT-175"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "a"}, {"int": "1"}]]},
+      "cbor": "a1616101",
+      "json": "{\"a\":1}"
+    },
+    {
+      "id": "table_tstr/wire_order",
+      "root": "Scores",
+      "description": "inserted b, aa, a; wire order is a, b, aa (length-first)",
+      "requirements": ["REQ-RT-160", "REQ-RT-165", "REQ-RT-175", "REQ-RT-177"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "a"}, {"int": "1"}], [{"tstr": "b"}, {"int": "2"}], [{"tstr": "aa"}, {"int": "3"}]]},
+      "cbor": "a361610161620262616103",
+      "json": "{\"a\":1,\"b\":2,\"aa\":3}"
+    },
+    {
+      "id": "table_tstr/int_extremes",
+      "root": "Scores",
+      "description": "int at both ends; the large magnitudes are JSON strings",
+      "requirements": ["REQ-RT-160", "REQ-RT-165", "REQ-RT-175", "REQ-RT-177", "REQ-RT-220"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "max"}, {"int": "9223372036854775807"}], [{"tstr": "min"}, {"int": "-9223372036854775808"}]]},
+      "cbor": "a2636d61781b7fffffffffffffff636d696e3b7fffffffffffffff",
+      "json": "{\"max\":\"9223372036854775807\",\"min\":\"-9223372036854775808\"}"
+    }
+  ]
+}

@@ -19,6 +19,21 @@
     "table_uint.cddl"
   ],
   "cases": [
-    "cases/positive/struct_text_keys.json"
+    "cases/positive/array_fixed.json",
+    "cases/positive/array_homogeneous.json",
+    "cases/positive/choice.json",
+    "cases/positive/comments.json",
+    "cases/positive/enum.json",
+    "cases/positive/forward_ref.json",
+    "cases/positive/json_edge.json",
+    "cases/positive/nested.json",
+    "cases/positive/optional_default.json",
+    "cases/positive/primitives.json",
+    "cases/positive/ranges.json",
+    "cases/positive/recursive.json",
+    "cases/positive/struct_text_keys.json",
+    "cases/positive/struct_uint_keys.json",
+    "cases/positive/table_tstr.json",
+    "cases/positive/table_uint.json"
   ]
 }

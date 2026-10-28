@@ -1,0 +1,38 @@
+{
+  "$schema": "../../manifest.schema.json",
+  "manifest_version": 1,
+  "schema": "array_fixed.cddl",
+  "kind": "positive",
+  "cases": [
+    {
+      "id": "array_fixed/optional_absent",
+      "root": "Triple",
+      "description": "trailing optional element omitted (the REQ-COMPAT-060 fixture)",
+      "requirements": ["REQ-COMPAT-060", "REQ-RT-160", "REQ-RT-175"],
+      "derivation": "cbor2",
+      "value": {"array": [{"uint": "1"}, {"tstr": "x"}]},
+      "cbor": "82016178",
+      "json": "[1,\"x\"]"
+    },
+    {
+      "id": "array_fixed/optional_true",
+      "root": "Triple",
+      "description": "trailing optional element present",
+      "requirements": ["REQ-RT-160", "REQ-RT-175"],
+      "derivation": "cbor2",
+      "value": {"array": [{"uint": "1"}, {"tstr": "x"}, {"bool": true}]},
+      "cbor": "83016178f5",
+      "json": "[1,\"x\",true]"
+    },
+    {
+      "id": "array_fixed/optional_false",
+      "root": "Triple",
+      "description": "trailing optional element present and false",
+      "requirements": ["REQ-RT-160", "REQ-RT-175"],
+      "derivation": "cbor2",
+      "value": {"array": [{"uint": "1"}, {"tstr": "x"}, {"bool": false}]},
+      "cbor": "83016178f4",
+      "json": "[1,\"x\",false]"
+    }
+  ]
+}
