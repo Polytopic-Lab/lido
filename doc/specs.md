@@ -417,6 +417,26 @@ machinery, and the generated code supplies the per-type schema knowledge.
   (JSON) at which the problem occurred. A bare field name is not
   actionable in a nested payload, which is where decode failures are
   most likely and hardest to diagnose.
+- **REQ-RT-066** The path REQ-RT-065 requires SHALL be written as follows,
+  so that the same fault yields the same path in every runtime: the root
+  of the DTO is the empty path; a struct field contributes its name *as
+  written in the schema* (not the generated identifier, which differs
+  per language by REQ-GEN naming rules), or its decimal key for an
+  integer-keyed field; a choice variant contributes its discriminant
+  (REQ-RT-370) in the same way, since that is what appears on the wire;
+  field and variant segments are joined by `.`; an array element
+  contributes `[n]` with `n` zero-based; a table entry contributes
+  `[key]`, where a `tstr` key is written as a JSON string (escaped as
+  REQ-RT-179 describes) and a `uint` key in decimal. A segment of the
+  `[...]` form is appended directly with no preceding `.`, so the path of
+  the second element of an array at the root is `[1]` and of a price
+  nested in the third item of an order is `items[2].price`. An error
+  that concerns a choice value as a whole (REQ-RT-380) carries the path
+  of that value, and the offending discriminant separately. Where input
+  is not well-formed (REQ-RT-310) and so no schema position can be
+  attributed, the path is that of the last value begun, if any. This
+  requirement fixes the path only; how an error reports its byte offset
+  or line and column is not fixed here.
 - **REQ-RT-070** IF JSON input contains a value that cannot be represented
   in the target DTO's schema, THEN the runtime library SHALL raise a
   decode error identifying the offending field. This does not include
@@ -496,6 +516,11 @@ hashed or signed.
   emitted form the JSON half of the conformance suite (REQ-ARCH-060)
   cannot be compared byte-exactly, and two runtime libraries could emit
   visibly different documents while both being "correct".
+- **REQ-RT-176** WHEN decoding a JSON object, the runtime library SHALL
+  accept its members in any order, mirroring REQ-RT-180's acceptance of
+  non-canonically ordered CBOR map keys; REQ-RT-177 constrains what is
+  emitted, not what is accepted. Duplicate member names remain an error
+  under REQ-RT-300.
 - **REQ-RT-177** The runtime library SHALL emit the members of a JSON
   object in the canonical order REQ-RT-160/165 define for CBOR map keys —
   bytewise over each key's *CBOR-encoded* form — so that a single
