@@ -1,0 +1,58 @@
+{
+  "$schema": "../../manifest.schema.json",
+  "manifest_version": 1,
+  "schema": "optional_default.cddl",
+  "kind": "negative",
+  "cases": [
+    {
+      "id": "optional_default/nickname_is_null",
+      "root": "Settings",
+      "description": "null on an optional tstr that does not admit null",
+      "requirements": ["REQ-RT-350"],
+      "derivation": "hand-encoded",
+      "input": {"cbor": "a1686e69636b6e616d65f6"},
+      "classification": "schema_invalid",
+      "error": {"kind": "null_not_allowed", "path": "nickname"}
+    },
+    {
+      "id": "optional_default/retries_is_null",
+      "root": "Settings",
+      "description": "null on a defaulted field is not 'use the default'",
+      "requirements": ["REQ-RT-080", "REQ-RT-350"],
+      "derivation": "hand-encoded",
+      "input": {"cbor": "a16772657472696573f6"},
+      "classification": "schema_invalid",
+      "error": {"kind": "null_not_allowed", "path": "retries"}
+    },
+    {
+      "id": "optional_default/note_is_number",
+      "root": "Settings",
+      "description": "note admits tstr or null, not integers",
+      "requirements": ["REQ-RT-060"],
+      "derivation": "hand-encoded",
+      "input": {"cbor": "a1646e6f746505"},
+      "classification": "schema_invalid",
+      "error": {"kind": "type_mismatch", "path": "note"}
+    },
+    {
+      "id": "optional_default/json_nickname_is_null",
+      "root": "Settings",
+      "description": "null on an optional tstr that does not admit null",
+      "requirements": ["REQ-RT-070", "REQ-RT-350"],
+      "derivation": "hand-encoded",
+      "input": {"json": "{\"nickname\":null}"},
+      "classification": "schema_invalid",
+      "error": {"kind": "null_not_allowed", "path": "nickname"}
+    },
+    {
+      "id": "optional_default/json_retries_is_negative",
+      "root": "Settings",
+      "description": "retries (uint) holds -1",
+      "requirements": ["REQ-RT-070"],
+      "derivation": "hand-encoded",
+      "input": {"json": "{\"retries\":-1}"},
+      "classification": "schema_invalid",
+      "error": {"kind": "type_mismatch", "path": "retries"}
+    }
+  ]
+}

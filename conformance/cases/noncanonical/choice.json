@@ -1,0 +1,20 @@
+{
+  "$schema": "../../manifest.schema.json",
+  "manifest_version": 1,
+  "schema": "choice.cddl",
+  "kind": "noncanonical",
+  "cases": [
+    {
+      "id": "choice/circle_indefinite_wrapper",
+      "root": "Shape",
+      "description": "the single-entry choice map written indefinite-length",
+      "requirements": ["REQ-RT-180", "REQ-RT-360"],
+      "derivation": "hand-encoded",
+      "variance": "indefinite_length",
+      "input": {"cbor": "bf66436972636c65a16672616469757305ff"},
+      "value": {"map": [[{"tstr": "Circle"}, {"map": [[{"tstr": "radius"}, {"uint": "5"}]]}]]},
+      "cbor": "a166436972636c65a16672616469757305",
+      "json": "{\"Circle\":{\"radius\":5}}"
+    }
+  ]
+}

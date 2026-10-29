@@ -1,0 +1,35 @@
+{
+  "$schema": "../../manifest.schema.json",
+  "manifest_version": 1,
+  "schema": "json_edge.cddl",
+  "kind": "encode_error",
+  "cases": [
+    {
+      "id": "json_edge/ratio_nan",
+      "root": "Edge",
+      "description": "NaN: CBOR f97e00, JSON has no form",
+      "requirements": ["REQ-RT-172", "REQ-RT-210"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "big"}, {"uint": "0"}], [{"tstr": "blob"}, {"bstr": ""}], [{"tstr": "ratio"}, {"f64": "NaN"}], [{"tstr": "signed"}, {"int": "0"}]]},
+      "expect": {"cbor": "a4636269670064626c6f624065726174696ff97e00667369676e656400", "json": {"error": {"kind": "not_representable", "path": "ratio"}}}
+    },
+    {
+      "id": "json_edge/ratio_infinity",
+      "root": "Edge",
+      "description": "+Infinity: CBOR f97c00, JSON has no form",
+      "requirements": ["REQ-RT-210"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "big"}, {"uint": "0"}], [{"tstr": "blob"}, {"bstr": ""}], [{"tstr": "ratio"}, {"f64": "Infinity"}], [{"tstr": "signed"}, {"int": "0"}]]},
+      "expect": {"cbor": "a4636269670064626c6f624065726174696ff97c00667369676e656400", "json": {"error": {"kind": "not_representable", "path": "ratio"}}}
+    },
+    {
+      "id": "json_edge/ratio_negative_infinity",
+      "root": "Edge",
+      "description": "-Infinity: CBOR f9fc00, JSON has no form",
+      "requirements": ["REQ-RT-210"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "big"}, {"uint": "0"}], [{"tstr": "blob"}, {"bstr": ""}], [{"tstr": "ratio"}, {"f64": "-Infinity"}], [{"tstr": "signed"}, {"int": "0"}]]},
+      "expect": {"cbor": "a4636269670064626c6f624065726174696ff9fc00667369676e656400", "json": {"error": {"kind": "not_representable", "path": "ratio"}}}
+    }
+  ]
+}

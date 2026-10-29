@@ -1,0 +1,98 @@
+{
+  "$schema": "../../manifest.schema.json",
+  "manifest_version": 1,
+  "schema": "enum.cddl",
+  "kind": "negative",
+  "cases": [
+    {
+      "id": "enum/color_unknown",
+      "root": "Color",
+      "description": "a text literal outside the enumeration",
+      "requirements": ["REQ-RT-060", "REQ-RT-385"],
+      "derivation": "hand-encoded",
+      "input": {"cbor": "66707572706c65"},
+      "classification": "schema_invalid",
+      "error": {"kind": "unknown_discriminant", "path": "", "discriminant": "purple"}
+    },
+    {
+      "id": "enum/color_wrong_case",
+      "root": "Color",
+      "description": "Red is not red",
+      "requirements": ["REQ-RT-060", "REQ-RT-385"],
+      "derivation": "hand-encoded",
+      "input": {"cbor": "63526564"},
+      "classification": "schema_invalid",
+      "error": {"kind": "unknown_discriminant", "path": "", "discriminant": "Red"}
+    },
+    {
+      "id": "enum/color_is_uint",
+      "root": "Color",
+      "description": "an integer where a text literal is required",
+      "requirements": ["REQ-RT-060", "REQ-RT-385"],
+      "derivation": "hand-encoded",
+      "input": {"cbor": "00"},
+      "classification": "schema_invalid",
+      "error": {"kind": "type_mismatch", "path": ""}
+    },
+    {
+      "id": "enum/status_unknown",
+      "root": "Status",
+      "description": "an integer outside the enumeration",
+      "requirements": ["REQ-RT-060", "REQ-RT-385"],
+      "derivation": "hand-encoded",
+      "input": {"cbor": "0f"},
+      "classification": "schema_invalid",
+      "error": {"kind": "unknown_discriminant", "path": "", "discriminant": "15"}
+    },
+    {
+      "id": "enum/status_ordinal",
+      "root": "Status",
+      "description": "0 is the ordinal of the first literal, not a literal",
+      "requirements": ["REQ-RT-385"],
+      "derivation": "hand-encoded",
+      "input": {"cbor": "00"},
+      "classification": "schema_invalid",
+      "error": {"kind": "unknown_discriminant", "path": "", "discriminant": "0"}
+    },
+    {
+      "id": "enum/status_is_text",
+      "root": "Status",
+      "description": "a tstr where an integer literal is required",
+      "requirements": ["REQ-RT-060", "REQ-RT-385"],
+      "derivation": "hand-encoded",
+      "input": {"cbor": "6374656e"},
+      "classification": "schema_invalid",
+      "error": {"kind": "type_mismatch", "path": ""}
+    },
+    {
+      "id": "enum/status_is_negative",
+      "root": "Status",
+      "description": "-10 is not an unsigned literal",
+      "requirements": ["REQ-RT-060"],
+      "derivation": "hand-encoded",
+      "input": {"cbor": "29"},
+      "classification": "schema_invalid",
+      "error": {"kind": "type_mismatch", "path": ""}
+    },
+    {
+      "id": "enum/json_color_unknown",
+      "root": "Color",
+      "description": "a text literal outside the enumeration",
+      "requirements": ["REQ-RT-070", "REQ-RT-385"],
+      "derivation": "hand-encoded",
+      "input": {"json": "\"purple\""},
+      "classification": "schema_invalid",
+      "error": {"kind": "unknown_discriminant", "path": "", "discriminant": "purple"}
+    },
+    {
+      "id": "enum/json_status_unknown",
+      "root": "Status",
+      "description": "an integer outside the enumeration",
+      "requirements": ["REQ-RT-070", "REQ-RT-385"],
+      "derivation": "hand-encoded",
+      "input": {"json": "15"},
+      "classification": "schema_invalid",
+      "error": {"kind": "unknown_discriminant", "path": "", "discriminant": "15"}
+    }
+  ]
+}

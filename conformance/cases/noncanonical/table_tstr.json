@@ -1,0 +1,20 @@
+{
+  "$schema": "../../manifest.schema.json",
+  "manifest_version": 1,
+  "schema": "table_tstr.cddl",
+  "kind": "noncanonical",
+  "cases": [
+    {
+      "id": "table_tstr/scores_unsorted",
+      "root": "Scores",
+      "description": "keys aa, a, b",
+      "requirements": ["REQ-RT-165", "REQ-RT-180"],
+      "derivation": "hand-encoded",
+      "variance": "unsorted_keys",
+      "input": {"cbor": "a362616103616101616202"},
+      "value": {"map": [[{"tstr": "a"}, {"int": "1"}], [{"tstr": "b"}, {"int": "2"}], [{"tstr": "aa"}, {"int": "3"}]]},
+      "cbor": "a361610161620262616103",
+      "json": "{\"a\":1,\"b\":2,\"aa\":3}"
+    }
+  ]
+}

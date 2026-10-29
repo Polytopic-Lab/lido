@@ -1,0 +1,98 @@
+{
+  "$schema": "../../manifest.schema.json",
+  "manifest_version": 1,
+  "schema": "ranges.cddl",
+  "kind": "negative",
+  "cases": [
+    {
+      "id": "ranges/level_above_255",
+      "root": "Reading",
+      "description": "level is 256, one above 0..255",
+      "requirements": ["REQ-RT-066", "REQ-RT-240"],
+      "derivation": "cbor2",
+      "input": {"cbor": "a36474656d7000656c6576656c19010065726174696ff90000"},
+      "classification": "schema_invalid",
+      "error": {"kind": "out_of_range", "path": "level", "constraint": "0..255"}
+    },
+    {
+      "id": "ranges/level_far_above",
+      "root": "Reading",
+      "description": "level is 2^32",
+      "requirements": ["REQ-RT-240"],
+      "derivation": "cbor2",
+      "input": {"cbor": "a36474656d7000656c6576656c1b000000010000000065726174696ff90000"},
+      "classification": "schema_invalid",
+      "error": {"kind": "out_of_range", "path": "level", "constraint": "0..255"}
+    },
+    {
+      "id": "ranges/ratio_above_100",
+      "root": "Reading",
+      "description": "ratio is 100.5, above 0.0..100.0",
+      "requirements": ["REQ-RT-240"],
+      "derivation": "cbor2",
+      "input": {"cbor": "a36474656d7000656c6576656c0065726174696ff95648"},
+      "classification": "schema_invalid",
+      "error": {"kind": "out_of_range", "path": "ratio", "constraint": "0.0..100.0"}
+    },
+    {
+      "id": "ranges/ratio_below_0",
+      "root": "Reading",
+      "description": "ratio is -0.5",
+      "requirements": ["REQ-RT-240"],
+      "derivation": "cbor2",
+      "input": {"cbor": "a36474656d7000656c6576656c0065726174696ff9b800"},
+      "classification": "schema_invalid",
+      "error": {"kind": "out_of_range", "path": "ratio", "constraint": "0.0..100.0"}
+    },
+    {
+      "id": "ranges/temp_above_125",
+      "root": "Reading",
+      "description": "temp is 126, above -40..125",
+      "requirements": ["REQ-RT-240"],
+      "derivation": "cbor2",
+      "input": {"cbor": "a36474656d70187e656c6576656c0065726174696ff90000"},
+      "classification": "schema_invalid",
+      "error": {"kind": "out_of_range", "path": "temp", "constraint": "-40..125"}
+    },
+    {
+      "id": "ranges/temp_below_minus_40",
+      "root": "Reading",
+      "description": "temp is -41",
+      "requirements": ["REQ-RT-240"],
+      "derivation": "cbor2",
+      "input": {"cbor": "a36474656d703828656c6576656c0065726174696ff90000"},
+      "classification": "schema_invalid",
+      "error": {"kind": "out_of_range", "path": "temp", "constraint": "-40..125"}
+    },
+    {
+      "id": "ranges/json_level_above_255",
+      "root": "Reading",
+      "description": "level is 256",
+      "requirements": ["REQ-RT-070", "REQ-RT-240"],
+      "derivation": "hand-encoded",
+      "input": {"json": "{\"temp\":0,\"level\":256,\"ratio\":0.0}"},
+      "classification": "schema_invalid",
+      "error": {"kind": "out_of_range", "path": "level", "constraint": "0..255"}
+    },
+    {
+      "id": "ranges/json_ratio_above_100",
+      "root": "Reading",
+      "description": "ratio is 100.5",
+      "requirements": ["REQ-RT-070", "REQ-RT-240"],
+      "derivation": "hand-encoded",
+      "input": {"json": "{\"temp\":0,\"level\":0,\"ratio\":100.5}"},
+      "classification": "schema_invalid",
+      "error": {"kind": "out_of_range", "path": "ratio", "constraint": "0.0..100.0"}
+    },
+    {
+      "id": "ranges/json_temp_below_minus_40",
+      "root": "Reading",
+      "description": "temp is -41",
+      "requirements": ["REQ-RT-070", "REQ-RT-240"],
+      "derivation": "hand-encoded",
+      "input": {"json": "{\"temp\":-41,\"level\":0,\"ratio\":0.0}"},
+      "classification": "schema_invalid",
+      "error": {"kind": "out_of_range", "path": "temp", "constraint": "-40..125"}
+    }
+  ]
+}

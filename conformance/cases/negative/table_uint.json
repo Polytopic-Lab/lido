@@ -1,0 +1,48 @@
+{
+  "$schema": "../../manifest.schema.json",
+  "manifest_version": 1,
+  "schema": "table_uint.cddl",
+  "kind": "negative",
+  "cases": [
+    {
+      "id": "table_uint/key_is_text",
+      "root": "Inventory",
+      "description": "a tstr key in a uint-keyed table",
+      "requirements": ["REQ-RT-060"],
+      "derivation": "hand-encoded",
+      "input": {"cbor": "a16178a2656c6162656c61616371747901"},
+      "classification": "schema_invalid",
+      "error": {"kind": "bad_key", "path": ""}
+    },
+    {
+      "id": "table_uint/value_is_uint",
+      "root": "Inventory",
+      "description": "an entry that is not a struct",
+      "requirements": ["REQ-RT-060", "REQ-RT-066"],
+      "derivation": "hand-encoded",
+      "input": {"cbor": "a10705"},
+      "classification": "schema_invalid",
+      "error": {"kind": "type_mismatch", "path": "[7]"}
+    },
+    {
+      "id": "table_uint/entry_missing_field",
+      "root": "Inventory",
+      "description": "an entry lacking qty; the path nests an entry and a field",
+      "requirements": ["REQ-RT-060", "REQ-RT-066"],
+      "derivation": "hand-encoded",
+      "input": {"cbor": "a107a1656c6162656c6161"},
+      "classification": "schema_invalid",
+      "error": {"kind": "missing_field", "path": "[7].qty"}
+    },
+    {
+      "id": "table_uint/json_key_not_decimal",
+      "root": "Inventory",
+      "description": "a member name that is not an integer",
+      "requirements": ["REQ-KEY-040", "REQ-RT-230"],
+      "derivation": "hand-encoded",
+      "input": {"json": "{\"x\":{\"label\":\"a\",\"qty\":1}}"},
+      "classification": "schema_invalid",
+      "error": {"kind": "bad_key", "path": ""}
+    }
+  ]
+}

@@ -1,0 +1,358 @@
+{
+  "$schema": "../../manifest.schema.json",
+  "manifest_version": 1,
+  "schema": "struct_text_keys.cddl",
+  "kind": "negative",
+  "cases": [
+    {
+      "id": "struct_text_keys/age_is_text",
+      "root": "Person",
+      "description": "age holds a tstr",
+      "requirements": ["REQ-RT-060", "REQ-RT-065", "REQ-RT-066"],
+      "derivation": "cbor2",
+      "input": {"cbor": "a2636167656178646e616d6563416461"},
+      "classification": "schema_invalid",
+      "error": {"kind": "type_mismatch", "path": "age"}
+    },
+    {
+      "id": "struct_text_keys/age_is_negative",
+      "root": "Person",
+      "description": "age (uint) holds -1",
+      "requirements": ["REQ-RT-060", "REQ-RT-065"],
+      "derivation": "cbor2",
+      "input": {"cbor": "a26361676520646e616d6563416461"},
+      "classification": "schema_invalid",
+      "error": {"kind": "type_mismatch", "path": "age"}
+    },
+    {
+      "id": "struct_text_keys/age_is_float",
+      "root": "Person",
+      "description": "age (uint) holds 1.5; no silent coercion",
+      "requirements": ["REQ-RT-060"],
+      "derivation": "cbor2",
+      "input": {"cbor": "a263616765f93e00646e616d6563416461"},
+      "classification": "schema_invalid",
+      "error": {"kind": "type_mismatch", "path": "age"}
+    },
+    {
+      "id": "struct_text_keys/age_is_tagged",
+      "root": "Person",
+      "description": "age wrapped in tag 1 is well-formed CBOR but not a uint",
+      "requirements": ["REQ-RT-060"],
+      "derivation": "hand-encoded",
+      "input": {"cbor": "a263616765c11824646e616d6563416461"},
+      "classification": "schema_invalid",
+      "error": {"kind": "type_mismatch", "path": "age"}
+    },
+    {
+      "id": "struct_text_keys/name_is_bytes",
+      "root": "Person",
+      "description": "name holds a bstr",
+      "requirements": ["REQ-RT-060"],
+      "derivation": "hand-encoded",
+      "input": {"cbor": "a2636167651824646e616d6543416461"},
+      "classification": "schema_invalid",
+      "error": {"kind": "type_mismatch", "path": "name"}
+    },
+    {
+      "id": "struct_text_keys/missing_name",
+      "root": "Person",
+      "description": "required name absent",
+      "requirements": ["REQ-RT-060", "REQ-RT-065"],
+      "derivation": "hand-encoded",
+      "input": {"cbor": "a1636167651824"},
+      "classification": "schema_invalid",
+      "error": {"kind": "missing_field", "path": "name"}
+    },
+    {
+      "id": "struct_text_keys/root_is_array",
+      "root": "Person",
+      "description": "an array where a struct is required; the path is the root",
+      "requirements": ["REQ-RT-060", "REQ-RT-066"],
+      "derivation": "hand-encoded",
+      "input": {"cbor": "80"},
+      "classification": "schema_invalid",
+      "error": {"kind": "type_mismatch", "path": ""}
+    },
+    {
+      "id": "struct_text_keys/email_is_null",
+      "root": "Person",
+      "description": "explicit null on a non-nullable optional is not 'absent'",
+      "requirements": ["REQ-RT-060", "REQ-RT-350"],
+      "derivation": "hand-encoded",
+      "input": {"cbor": "a3636167651824646e616d656341646165656d61696cf6"},
+      "classification": "schema_invalid",
+      "error": {"kind": "null_not_allowed", "path": "email"}
+    },
+    {
+      "id": "struct_text_keys/truncated_empty",
+      "root": "Person",
+      "description": "empty input",
+      "requirements": ["REQ-RT-310"],
+      "derivation": "hand-encoded",
+      "input": {"cbor": ""},
+      "classification": "malformed",
+      "error": {"kind": "truncated"}
+    },
+    {
+      "id": "struct_text_keys/truncated_map_header",
+      "root": "Person",
+      "description": "a map header promising two entries and nothing else",
+      "requirements": ["REQ-RT-310"],
+      "derivation": "hand-encoded",
+      "input": {"cbor": "a2"},
+      "classification": "malformed",
+      "error": {"kind": "truncated"}
+    },
+    {
+      "id": "struct_text_keys/truncated_mid_head",
+      "root": "Person",
+      "description": "a 2-byte integer head with one byte",
+      "requirements": ["REQ-RT-310"],
+      "derivation": "hand-encoded",
+      "input": {"cbor": "a1636167651901"},
+      "classification": "malformed",
+      "error": {"kind": "truncated"}
+    },
+    {
+      "id": "struct_text_keys/truncated_mid_string",
+      "root": "Person",
+      "description": "valid input cut inside the last string",
+      "requirements": ["REQ-RT-310"],
+      "derivation": "hand-encoded",
+      "input": {"cbor": "a2636167651824646e616d65634164"},
+      "classification": "malformed",
+      "error": {"kind": "truncated"}
+    },
+    {
+      "id": "struct_text_keys/truncated_indefinite_map",
+      "root": "Person",
+      "description": "an indefinite-length map never closed",
+      "requirements": ["REQ-RT-180", "REQ-RT-310"],
+      "derivation": "hand-encoded",
+      "input": {"cbor": "bf636167651824"},
+      "classification": "malformed",
+      "error": {"kind": "truncated"}
+    },
+    {
+      "id": "struct_text_keys/trailing_data",
+      "root": "Person",
+      "description": "a complete item followed by another",
+      "requirements": ["REQ-RT-310"],
+      "derivation": "hand-encoded",
+      "input": {"cbor": "a2636167651824646e616d656341646100"},
+      "classification": "malformed",
+      "error": {"kind": "trailing_data"}
+    },
+    {
+      "id": "struct_text_keys/reserved_head",
+      "root": "Person",
+      "description": "additional information 28 is reserved",
+      "requirements": ["REQ-RT-310"],
+      "derivation": "hand-encoded",
+      "input": {"cbor": "a1636167651c"},
+      "classification": "malformed",
+      "error": {"kind": "syntax"}
+    },
+    {
+      "id": "struct_text_keys/stray_break",
+      "root": "Person",
+      "description": "a break with no indefinite item open",
+      "requirements": ["REQ-RT-310"],
+      "derivation": "hand-encoded",
+      "input": {"cbor": "ff"},
+      "classification": "malformed",
+      "error": {"kind": "syntax"}
+    },
+    {
+      "id": "struct_text_keys/invalid_utf8_stray_continuation",
+      "root": "Person",
+      "description": "name is 0xc3 0x28: a lead byte followed by a non-continuation",
+      "requirements": ["REQ-RT-315"],
+      "derivation": "hand-encoded",
+      "input": {"cbor": "a2636167651824646e616d6562c328"},
+      "classification": "malformed",
+      "error": {"kind": "invalid_utf8"}
+    },
+    {
+      "id": "struct_text_keys/invalid_utf8_surrogate",
+      "root": "Person",
+      "description": "name is a UTF-16 surrogate encoded in UTF-8 (ed a0 80)",
+      "requirements": ["REQ-RT-315"],
+      "derivation": "hand-encoded",
+      "input": {"cbor": "a2636167651824646e616d6563eda080"},
+      "classification": "malformed",
+      "error": {"kind": "invalid_utf8"}
+    },
+    {
+      "id": "struct_text_keys/invalid_utf8_in_key",
+      "root": "Person",
+      "description": "a map key that is not UTF-8",
+      "requirements": ["REQ-RT-315"],
+      "derivation": "hand-encoded",
+      "input": {"cbor": "a2636167ff1824646e616d6563416461"},
+      "classification": "malformed",
+      "error": {"kind": "invalid_utf8"}
+    },
+    {
+      "id": "struct_text_keys/duplicate_key_adjacent",
+      "root": "Person",
+      "description": "age twice, adjacent",
+      "requirements": ["REQ-RT-300"],
+      "derivation": "hand-encoded",
+      "input": {"cbor": "a3636167651824636167651825646e616d6563416461"},
+      "classification": "malformed",
+      "error": {"kind": "duplicate_key"}
+    },
+    {
+      "id": "struct_text_keys/duplicate_key_unsorted",
+      "root": "Person",
+      "description": "name, age, name: duplicates separated by another key",
+      "requirements": ["REQ-RT-180", "REQ-RT-300"],
+      "derivation": "hand-encoded",
+      "input": {"cbor": "a3646e616d6563416461636167651824646e616d6563426f62"},
+      "classification": "malformed",
+      "error": {"kind": "duplicate_key"}
+    },
+    {
+      "id": "struct_text_keys/json_truncated",
+      "root": "Person",
+      "description": "an object missing its closing brace",
+      "requirements": ["REQ-RT-310"],
+      "derivation": "hand-encoded",
+      "input": {"json": "{\"age\":36,\"name\":\"Ada\""},
+      "classification": "malformed",
+      "error": {"kind": "truncated"}
+    },
+    {
+      "id": "struct_text_keys/json_empty",
+      "root": "Person",
+      "description": "empty text",
+      "requirements": ["REQ-RT-310"],
+      "derivation": "hand-encoded",
+      "input": {"json": ""},
+      "classification": "malformed",
+      "error": {"kind": "truncated"}
+    },
+    {
+      "id": "struct_text_keys/json_trailing_data",
+      "root": "Person",
+      "description": "a document followed by more text",
+      "requirements": ["REQ-RT-310"],
+      "derivation": "hand-encoded",
+      "input": {"json": "{\"age\":36,\"name\":\"Ada\"} x"},
+      "classification": "malformed",
+      "error": {"kind": "trailing_data"}
+    },
+    {
+      "id": "struct_text_keys/json_single_quotes",
+      "root": "Person",
+      "description": "single-quoted strings are not JSON",
+      "requirements": ["REQ-RT-310"],
+      "derivation": "hand-encoded",
+      "input": {"json": "{'age':36,'name':'Ada'}"},
+      "classification": "malformed",
+      "error": {"kind": "syntax"}
+    },
+    {
+      "id": "struct_text_keys/json_trailing_comma",
+      "root": "Person",
+      "description": "a trailing comma",
+      "requirements": ["REQ-RT-310"],
+      "derivation": "hand-encoded",
+      "input": {"json": "{\"age\":36,\"name\":\"Ada\",}"},
+      "classification": "malformed",
+      "error": {"kind": "syntax"}
+    },
+    {
+      "id": "struct_text_keys/json_nan_literal",
+      "root": "Person",
+      "description": "NaN is not a JSON literal",
+      "requirements": ["REQ-RT-210", "REQ-RT-310"],
+      "derivation": "hand-encoded",
+      "input": {"json": "{\"age\":NaN,\"name\":\"Ada\"}"},
+      "classification": "malformed",
+      "error": {"kind": "syntax"}
+    },
+    {
+      "id": "struct_text_keys/json_raw_newline_in_string",
+      "root": "Person",
+      "description": "an unescaped line break inside a string",
+      "requirements": ["REQ-RT-179", "REQ-RT-310"],
+      "derivation": "hand-encoded",
+      "input": {"json": "{\"age\":36,\"name\":\"A\nda\"}"},
+      "classification": "malformed",
+      "error": {"kind": "syntax"}
+    },
+    {
+      "id": "struct_text_keys/json_duplicate_member",
+      "root": "Person",
+      "description": "age twice",
+      "requirements": ["REQ-RT-300"],
+      "derivation": "hand-encoded",
+      "input": {"json": "{\"age\":36,\"age\":37,\"name\":\"Ada\"}"},
+      "classification": "malformed",
+      "error": {"kind": "duplicate_key"}
+    },
+    {
+      "id": "struct_text_keys/json_age_is_true",
+      "root": "Person",
+      "description": "age holds a boolean",
+      "requirements": ["REQ-RT-070"],
+      "derivation": "hand-encoded",
+      "input": {"json": "{\"age\":true,\"name\":\"Ada\"}"},
+      "classification": "schema_invalid",
+      "error": {"kind": "type_mismatch", "path": "age"}
+    },
+    {
+      "id": "struct_text_keys/json_age_is_word",
+      "root": "Person",
+      "description": "age holds a string that is not a decimal integer",
+      "requirements": ["REQ-RT-070", "REQ-RT-220"],
+      "derivation": "hand-encoded",
+      "input": {"json": "{\"age\":\"x\",\"name\":\"Ada\"}"},
+      "classification": "schema_invalid",
+      "error": {"kind": "type_mismatch", "path": "age"}
+    },
+    {
+      "id": "struct_text_keys/json_age_is_fraction",
+      "root": "Person",
+      "description": "age (uint) holds 1.5",
+      "requirements": ["REQ-RT-070"],
+      "derivation": "hand-encoded",
+      "input": {"json": "{\"age\":1.5,\"name\":\"Ada\"}"},
+      "classification": "schema_invalid",
+      "error": {"kind": "type_mismatch", "path": "age"}
+    },
+    {
+      "id": "struct_text_keys/json_name_is_number",
+      "root": "Person",
+      "description": "name holds a number",
+      "requirements": ["REQ-RT-070"],
+      "derivation": "hand-encoded",
+      "input": {"json": "{\"age\":36,\"name\":7}"},
+      "classification": "schema_invalid",
+      "error": {"kind": "type_mismatch", "path": "name"}
+    },
+    {
+      "id": "struct_text_keys/json_email_is_null",
+      "root": "Person",
+      "description": "explicit null on a non-nullable optional",
+      "requirements": ["REQ-RT-070", "REQ-RT-350"],
+      "derivation": "hand-encoded",
+      "input": {"json": "{\"age\":36,\"name\":\"Ada\",\"email\":null}"},
+      "classification": "schema_invalid",
+      "error": {"kind": "null_not_allowed", "path": "email"}
+    },
+    {
+      "id": "struct_text_keys/json_root_is_array",
+      "root": "Person",
+      "description": "an array where a struct is required",
+      "requirements": ["REQ-RT-070"],
+      "derivation": "hand-encoded",
+      "input": {"json": "[]"},
+      "classification": "schema_invalid",
+      "error": {"kind": "type_mismatch", "path": ""}
+    }
+  ]
+}

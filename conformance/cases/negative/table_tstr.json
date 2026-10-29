@@ -1,0 +1,38 @@
+{
+  "$schema": "../../manifest.schema.json",
+  "manifest_version": 1,
+  "schema": "table_tstr.cddl",
+  "kind": "negative",
+  "cases": [
+    {
+      "id": "table_tstr/value_is_text",
+      "root": "Scores",
+      "description": "a table value of the wrong type; the path names the entry",
+      "requirements": ["REQ-RT-060", "REQ-RT-066"],
+      "derivation": "hand-encoded",
+      "input": {"cbor": "a161616178"},
+      "classification": "schema_invalid",
+      "error": {"kind": "type_mismatch", "path": "[\"a\"]"}
+    },
+    {
+      "id": "table_tstr/key_is_uint",
+      "root": "Scores",
+      "description": "a uint key in a tstr-keyed table",
+      "requirements": ["REQ-RT-060"],
+      "derivation": "hand-encoded",
+      "input": {"cbor": "a10105"},
+      "classification": "schema_invalid",
+      "error": {"kind": "bad_key", "path": ""}
+    },
+    {
+      "id": "table_tstr/root_is_array",
+      "root": "Scores",
+      "description": "an array where a table is required",
+      "requirements": ["REQ-RT-060"],
+      "derivation": "hand-encoded",
+      "input": {"cbor": "80"},
+      "classification": "schema_invalid",
+      "error": {"kind": "type_mismatch", "path": ""}
+    }
+  ]
+}

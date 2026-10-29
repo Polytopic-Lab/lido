@@ -1,0 +1,62 @@
+{
+  "$schema": "../../manifest.schema.json",
+  "manifest_version": 1,
+  "schema": "ranges.cddl",
+  "kind": "encode_error",
+  "cases": [
+    {
+      "id": "ranges/encode_level_above_255",
+      "root": "Reading",
+      "description": "level 256 in 0..255 cannot be emitted in either encoding",
+      "requirements": ["REQ-RT-250"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "temp"}, {"int": "0"}], [{"tstr": "level"}, {"uint": "256"}], [{"tstr": "ratio"}, {"f64": "0"}]]},
+      "expect": {"cbor": {"error": {"kind": "out_of_range", "path": "level", "constraint": "0..255"}}, "json": {"error": {"kind": "out_of_range", "path": "level", "constraint": "0..255"}}}
+    },
+    {
+      "id": "ranges/encode_level_far_above",
+      "root": "Reading",
+      "description": "level 2^32",
+      "requirements": ["REQ-RT-250"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "temp"}, {"int": "0"}], [{"tstr": "level"}, {"uint": "4294967296"}], [{"tstr": "ratio"}, {"f64": "0"}]]},
+      "expect": {"cbor": {"error": {"kind": "out_of_range", "path": "level", "constraint": "0..255"}}, "json": {"error": {"kind": "out_of_range", "path": "level", "constraint": "0..255"}}}
+    },
+    {
+      "id": "ranges/encode_ratio_above_100",
+      "root": "Reading",
+      "description": "ratio 100.5 in 0.0..100.0",
+      "requirements": ["REQ-RT-250"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "temp"}, {"int": "0"}], [{"tstr": "level"}, {"uint": "0"}], [{"tstr": "ratio"}, {"f64": "100.5"}]]},
+      "expect": {"cbor": {"error": {"kind": "out_of_range", "path": "ratio", "constraint": "0.0..100.0"}}, "json": {"error": {"kind": "out_of_range", "path": "ratio", "constraint": "0.0..100.0"}}}
+    },
+    {
+      "id": "ranges/encode_ratio_below_0",
+      "root": "Reading",
+      "description": "ratio -0.5",
+      "requirements": ["REQ-RT-250"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "temp"}, {"int": "0"}], [{"tstr": "level"}, {"uint": "0"}], [{"tstr": "ratio"}, {"f64": "-0.5"}]]},
+      "expect": {"cbor": {"error": {"kind": "out_of_range", "path": "ratio", "constraint": "0.0..100.0"}}, "json": {"error": {"kind": "out_of_range", "path": "ratio", "constraint": "0.0..100.0"}}}
+    },
+    {
+      "id": "ranges/encode_temp_above_125",
+      "root": "Reading",
+      "description": "temp 126 in -40..125",
+      "requirements": ["REQ-RT-250"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "temp"}, {"int": "126"}], [{"tstr": "level"}, {"uint": "0"}], [{"tstr": "ratio"}, {"f64": "0"}]]},
+      "expect": {"cbor": {"error": {"kind": "out_of_range", "path": "temp", "constraint": "-40..125"}}, "json": {"error": {"kind": "out_of_range", "path": "temp", "constraint": "-40..125"}}}
+    },
+    {
+      "id": "ranges/encode_temp_below_minus_40",
+      "root": "Reading",
+      "description": "temp -41",
+      "requirements": ["REQ-RT-250"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "temp"}, {"int": "-41"}], [{"tstr": "level"}, {"uint": "0"}], [{"tstr": "ratio"}, {"f64": "0"}]]},
+      "expect": {"cbor": {"error": {"kind": "out_of_range", "path": "temp", "constraint": "-40..125"}}, "json": {"error": {"kind": "out_of_range", "path": "temp", "constraint": "-40..125"}}}
+    }
+  ]
+}

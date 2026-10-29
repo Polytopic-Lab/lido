@@ -1,0 +1,38 @@
+{
+  "$schema": "../../manifest.schema.json",
+  "manifest_version": 1,
+  "schema": "json_edge.cddl",
+  "kind": "negative",
+  "cases": [
+    {
+      "id": "json_edge/json_blob_bad_alphabet",
+      "root": "Edge",
+      "description": "a character outside the base64url alphabet",
+      "requirements": ["REQ-RT-070", "REQ-RT-200"],
+      "derivation": "hand-encoded",
+      "input": {"json": "{\"blob\":\"!!\",\"big\":0,\"signed\":0,\"ratio\":0}"},
+      "classification": "schema_invalid",
+      "error": {"kind": "type_mismatch", "path": "blob"}
+    },
+    {
+      "id": "json_edge/json_blob_bad_length",
+      "root": "Edge",
+      "description": "a single base64url character cannot encode whole bytes",
+      "requirements": ["REQ-RT-070", "REQ-RT-200"],
+      "derivation": "hand-encoded",
+      "input": {"json": "{\"blob\":\"A\",\"big\":0,\"signed\":0,\"ratio\":0}"},
+      "classification": "schema_invalid",
+      "error": {"kind": "type_mismatch", "path": "blob"}
+    },
+    {
+      "id": "json_edge/json_big_is_fraction",
+      "root": "Edge",
+      "description": "a uint field holding 1.5",
+      "requirements": ["REQ-RT-070", "REQ-RT-220"],
+      "derivation": "hand-encoded",
+      "input": {"json": "{\"blob\":\"\",\"big\":1.5,\"signed\":0,\"ratio\":0}"},
+      "classification": "schema_invalid",
+      "error": {"kind": "type_mismatch", "path": "big"}
+    }
+  ]
+}

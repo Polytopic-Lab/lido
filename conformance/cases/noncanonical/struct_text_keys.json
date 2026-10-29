@@ -1,0 +1,140 @@
+{
+  "$schema": "../../manifest.schema.json",
+  "manifest_version": 1,
+  "schema": "struct_text_keys.cddl",
+  "kind": "noncanonical",
+  "cases": [
+    {
+      "id": "struct_text_keys/person_keys_alphabetical",
+      "root": "Person",
+      "description": "keys in alphabetical order: age, email, name",
+      "requirements": ["REQ-RT-165", "REQ-RT-180"],
+      "derivation": "hand-encoded",
+      "variance": "unsorted_keys",
+      "input": {"cbor": "a363616765182465656d61696c656140622e63646e616d6563416461"},
+      "value": {"map": [[{"tstr": "age"}, {"uint": "36"}], [{"tstr": "name"}, {"tstr": "Ada"}], [{"tstr": "email"}, {"tstr": "a@b.c"}]]},
+      "cbor": "a3636167651824646e616d656341646165656d61696c656140622e63",
+      "json": "{\"age\":36,\"name\":\"Ada\",\"email\":\"a@b.c\"}"
+    },
+    {
+      "id": "struct_text_keys/person_keys_declaration_order",
+      "root": "Person",
+      "description": "keys in declaration order: name, age, email",
+      "requirements": ["REQ-RT-165", "REQ-RT-180"],
+      "derivation": "hand-encoded",
+      "variance": "unsorted_keys",
+      "input": {"cbor": "a3646e616d656341646163616765182465656d61696c656140622e63"},
+      "value": {"map": [[{"tstr": "age"}, {"uint": "36"}], [{"tstr": "name"}, {"tstr": "Ada"}], [{"tstr": "email"}, {"tstr": "a@b.c"}]]},
+      "cbor": "a3636167651824646e616d656341646165656d61696c656140622e63",
+      "json": "{\"age\":36,\"name\":\"Ada\",\"email\":\"a@b.c\"}"
+    },
+    {
+      "id": "struct_text_keys/person_indefinite_map",
+      "root": "Person",
+      "description": "the map as {_ ...}",
+      "requirements": ["REQ-RT-180"],
+      "derivation": "hand-encoded",
+      "variance": "indefinite_length",
+      "input": {"cbor": "bf636167651824646e616d6563416461ff"},
+      "value": {"map": [[{"tstr": "age"}, {"uint": "36"}], [{"tstr": "name"}, {"tstr": "Ada"}]]},
+      "cbor": "a2636167651824646e616d6563416461",
+      "json": "{\"age\":36,\"name\":\"Ada\"}"
+    },
+    {
+      "id": "struct_text_keys/person_indefinite_text",
+      "root": "Person",
+      "description": "name as the chunked string (_ \"Ad\", \"a\")",
+      "requirements": ["REQ-RT-180"],
+      "derivation": "hand-encoded",
+      "variance": "indefinite_length",
+      "input": {"cbor": "a2636167651824646e616d657f6241646161ff"},
+      "value": {"map": [[{"tstr": "age"}, {"uint": "36"}], [{"tstr": "name"}, {"tstr": "Ada"}]]},
+      "cbor": "a2636167651824646e616d6563416461",
+      "json": "{\"age\":36,\"name\":\"Ada\"}"
+    },
+    {
+      "id": "struct_text_keys/person_key_head_not_shortest",
+      "root": "Person",
+      "description": "key age written with a 1-byte length argument (78 03)",
+      "requirements": ["REQ-RT-160", "REQ-RT-180"],
+      "derivation": "hand-encoded",
+      "variance": "non_shortest_head",
+      "input": {"cbor": "a2646e616d656341646178036167651824"},
+      "value": {"map": [[{"tstr": "age"}, {"uint": "36"}], [{"tstr": "name"}, {"tstr": "Ada"}]]},
+      "cbor": "a2636167651824646e616d6563416461",
+      "json": "{\"age\":36,\"name\":\"Ada\"}"
+    },
+    {
+      "id": "struct_text_keys/json_whitespace",
+      "root": "Person",
+      "description": "tabs, line breaks and spaces between every token",
+      "requirements": ["REQ-RT-175"],
+      "derivation": "hand-encoded",
+      "variance": "whitespace",
+      "input": {"json": " \n{ \"age\" :\t36 ,\r\n \"name\" : \"Ada\" }\n"},
+      "value": {"map": [[{"tstr": "age"}, {"uint": "36"}], [{"tstr": "name"}, {"tstr": "Ada"}]]},
+      "cbor": "a2636167651824646e616d6563416461",
+      "json": "{\"age\":36,\"name\":\"Ada\"}"
+    },
+    {
+      "id": "struct_text_keys/json_member_order",
+      "root": "Person",
+      "description": "members in declaration order rather than canonical order",
+      "requirements": ["REQ-RT-176"],
+      "derivation": "hand-encoded",
+      "variance": "member_order",
+      "input": {"json": "{\"name\":\"Ada\",\"age\":36}"},
+      "value": {"map": [[{"tstr": "age"}, {"uint": "36"}], [{"tstr": "name"}, {"tstr": "Ada"}]]},
+      "cbor": "a2636167651824646e616d6563416461",
+      "json": "{\"age\":36,\"name\":\"Ada\"}"
+    },
+    {
+      "id": "struct_text_keys/json_age_as_string",
+      "root": "Person",
+      "description": "an integer field written as a string",
+      "requirements": ["REQ-RT-220"],
+      "derivation": "hand-encoded",
+      "variance": "int_as_string",
+      "input": {"json": "{\"age\":\"36\",\"name\":\"Ada\"}"},
+      "value": {"map": [[{"tstr": "age"}, {"uint": "36"}], [{"tstr": "name"}, {"tstr": "Ada"}]]},
+      "cbor": "a2636167651824646e616d6563416461",
+      "json": "{\"age\":36,\"name\":\"Ada\"}"
+    },
+    {
+      "id": "struct_text_keys/json_escaped_unicode",
+      "root": "Person",
+      "description": "é as \\u00EB (uppercase hex) and a slash as \\/",
+      "requirements": ["REQ-RT-179"],
+      "derivation": "hand-encoded",
+      "variance": "string_escapes",
+      "input": {"json": "{\"age\":36,\"name\":\"Zo\\u00EB\\/x\"}"},
+      "value": {"map": [[{"tstr": "age"}, {"uint": "36"}], [{"tstr": "name"}, {"tstr": "Zoë/x"}]]},
+      "cbor": "a2636167651824646e616d65665a6fc3ab2f78",
+      "json": "{\"age\":36,\"name\":\"Zoë/x\"}"
+    },
+    {
+      "id": "struct_text_keys/json_escaped_surrogate_pair",
+      "root": "Person",
+      "description": "U+1F600 as a surrogate pair escape",
+      "requirements": ["REQ-RT-179"],
+      "derivation": "hand-encoded",
+      "variance": "string_escapes",
+      "input": {"json": "{\"age\":36,\"name\":\"\\ud83d\\ude00\"}"},
+      "value": {"map": [[{"tstr": "age"}, {"uint": "36"}], [{"tstr": "name"}, {"tstr": "😀"}]]},
+      "cbor": "a2636167651824646e616d6564f09f9880",
+      "json": "{\"age\":36,\"name\":\"😀\"}"
+    },
+    {
+      "id": "struct_text_keys/json_escaped_control",
+      "root": "Person",
+      "description": "a line feed as \\u000a and a quote as \\u0022",
+      "requirements": ["REQ-RT-179"],
+      "derivation": "hand-encoded",
+      "variance": "string_escapes",
+      "input": {"json": "{\"age\":36,\"name\":\"a\\u000a\\u0022b\"}"},
+      "value": {"map": [[{"tstr": "age"}, {"uint": "36"}], [{"tstr": "name"}, {"tstr": "a\n\"b"}]]},
+      "cbor": "a2636167651824646e616d6564610a2262",
+      "json": "{\"age\":36,\"name\":\"a\\n\\\"b\"}"
+    }
+  ]
+}

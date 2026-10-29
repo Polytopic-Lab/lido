@@ -13,18 +13,43 @@
       "type": "string",
       "pattern": "^[a-z][a-z0-9_]*\\.cddl$"
     },
-    "kind": { "enum": ["positive", "negative", "noncanonical", "evolution"] },
+    "kind": {
+      "enum": ["positive", "negative", "noncanonical", "encode_error", "evolution"]
+    },
     "cases": { "type": "array", "minItems": 1 }
   },
   "additionalProperties": false,
-  "if": { "properties": { "kind": { "const": "positive" } } },
-  "then": {
-    "properties": { "cases": { "items": { "$ref": "#/$defs/positiveCase" } } }
-  },
-  "else": {
-    "$comment": "negative, noncanonical and evolution records are defined by slices 1.3 and 1.4; until then no case may take those shapes.",
-    "properties": { "cases": false }
-  },
+  "allOf": [
+    {
+      "if": { "properties": { "kind": { "const": "positive" } } },
+      "then": {
+        "properties": { "cases": { "items": { "$ref": "#/$defs/positiveCase" } } }
+      }
+    },
+    {
+      "if": { "properties": { "kind": { "const": "negative" } } },
+      "then": {
+        "properties": { "cases": { "items": { "$ref": "#/$defs/negativeCase" } } }
+      }
+    },
+    {
+      "if": { "properties": { "kind": { "const": "noncanonical" } } },
+      "then": {
+        "properties": { "cases": { "items": { "$ref": "#/$defs/noncanonicalCase" } } }
+      }
+    },
+    {
+      "if": { "properties": { "kind": { "const": "encode_error" } } },
+      "then": {
+        "properties": { "cases": { "items": { "$ref": "#/$defs/encodeErrorCase" } } }
+      }
+    },
+    {
+      "$comment": "The evolution record is defined by slice 1.4; until then no case may take that shape.",
+      "if": { "properties": { "kind": { "const": "evolution" } } },
+      "then": { "properties": { "cases": false } }
+    }
+  ],
   "$defs": {
     "positiveCase": {
       "type": "object",
@@ -169,6 +194,150 @@
             "minItems": 2,
             "maxItems": 2
           }
+        }
+      },
+      "additionalProperties": false
+    },
+    "input": {
+      "description": "A decode input: exactly one of CBOR (lowercase hex, possibly empty) or JSON (exact text, possibly empty).",
+      "type": "object",
+      "properties": {
+        "cbor": { "type": "string", "pattern": "^([0-9a-f]{2})*$" },
+        "json": { "type": "string" }
+      },
+      "oneOf": [{ "required": ["cbor"] }, { "required": ["json"] }],
+      "additionalProperties": false
+    },
+    "negativeCase": {
+      "description": "A decode that must fail. classification is the DoD's two-way split (D-010).",
+      "type": "object",
+      "required": ["id", "root", "description", "requirements", "derivation", "input", "classification", "error"],
+      "properties": {
+        "id": { "$ref": "#/$defs/positiveCase/properties/id" },
+        "root": { "$ref": "#/$defs/positiveCase/properties/root" },
+        "description": { "$ref": "#/$defs/positiveCase/properties/description" },
+        "requirements": { "$ref": "#/$defs/positiveCase/properties/requirements" },
+        "derivation": { "$ref": "#/$defs/positiveCase/properties/derivation" },
+        "input": { "$ref": "#/$defs/input" },
+        "classification": { "enum": ["malformed", "schema_invalid"] },
+        "error": {
+          "type": "object",
+          "required": ["kind"],
+          "properties": {
+            "kind": {
+              "enum": [
+                "truncated", "trailing_data", "syntax", "invalid_utf8", "duplicate_key",
+                "type_mismatch", "missing_field", "null_not_allowed", "unknown_discriminant",
+                "invalid_choice", "out_of_range", "wrong_length", "bad_key"
+              ]
+            },
+            "path": { "type": "string" },
+            "discriminant": { "type": "string" },
+            "constraint": { "type": "string", "minLength": 1 }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": { "properties": { "classification": { "const": "malformed" } } },
+          "then": {
+            "properties": {
+              "error": {
+                "properties": {
+                  "kind": { "enum": ["truncated", "trailing_data", "syntax", "invalid_utf8", "duplicate_key"] }
+                },
+                "not": { "required": ["path"] }
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "error": {
+                "required": ["path"],
+                "properties": {
+                  "kind": {
+                    "enum": [
+                      "type_mismatch", "missing_field", "null_not_allowed", "unknown_discriminant",
+                      "invalid_choice", "out_of_range", "wrong_length", "bad_key"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "noncanonicalCase": {
+      "description": "An input a decoder must accept, with the canonical vector it is equivalent to.",
+      "type": "object",
+      "required": ["id", "root", "description", "requirements", "derivation", "variance", "input", "value", "cbor"],
+      "properties": {
+        "id": { "$ref": "#/$defs/positiveCase/properties/id" },
+        "root": { "$ref": "#/$defs/positiveCase/properties/root" },
+        "description": { "$ref": "#/$defs/positiveCase/properties/description" },
+        "requirements": { "$ref": "#/$defs/positiveCase/properties/requirements" },
+        "derivation": { "$ref": "#/$defs/positiveCase/properties/derivation" },
+        "variance": {
+          "enum": [
+            "indefinite_length", "unsorted_keys", "non_shortest_head", "wider_float", "non_canonical_nan",
+            "whitespace", "string_escapes", "number_spelling", "int_as_string", "int_as_number",
+            "base64_padding", "member_order", "absent_default"
+          ]
+        },
+        "input": { "$ref": "#/$defs/input" },
+        "value": { "$ref": "#/$defs/value" },
+        "cbor": { "$ref": "#/$defs/positiveCase/properties/cbor" },
+        "json": { "$ref": "#/$defs/positiveCase/properties/json" }
+      },
+      "additionalProperties": false
+    },
+    "encodeError": {
+      "type": "object",
+      "required": ["error"],
+      "properties": {
+        "error": {
+          "type": "object",
+          "required": ["kind", "path"],
+          "properties": {
+            "kind": { "enum": ["not_representable", "out_of_range"] },
+            "path": { "type": "string" },
+            "constraint": { "type": "string", "minLength": 1 }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "encodeErrorCase": {
+      "description": "An encode that must fail in at least one encoding; the other, if it succeeds, gives its exact output.",
+      "type": "object",
+      "required": ["id", "root", "description", "requirements", "derivation", "value", "expect"],
+      "properties": {
+        "id": { "$ref": "#/$defs/positiveCase/properties/id" },
+        "root": { "$ref": "#/$defs/positiveCase/properties/root" },
+        "description": { "$ref": "#/$defs/positiveCase/properties/description" },
+        "requirements": { "$ref": "#/$defs/positiveCase/properties/requirements" },
+        "derivation": { "$ref": "#/$defs/positiveCase/properties/derivation" },
+        "value": { "$ref": "#/$defs/value" },
+        "expect": {
+          "type": "object",
+          "required": ["cbor", "json"],
+          "properties": {
+            "cbor": {
+              "oneOf": [{ "$ref": "#/$defs/positiveCase/properties/cbor" }, { "$ref": "#/$defs/encodeError" }]
+            },
+            "json": {
+              "oneOf": [{ "$ref": "#/$defs/positiveCase/properties/json" }, { "$ref": "#/$defs/encodeError" }]
+            }
+          },
+          "anyOf": [
+            { "properties": { "cbor": { "type": "object" } } },
+            { "properties": { "json": { "type": "object" } } }
+          ],
+          "additionalProperties": false
         }
       },
       "additionalProperties": false

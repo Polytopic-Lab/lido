@@ -1,0 +1,38 @@
+{
+  "$schema": "../../manifest.schema.json",
+  "manifest_version": 1,
+  "schema": "nested.cddl",
+  "kind": "negative",
+  "cases": [
+    {
+      "id": "nested/deep_type_mismatch",
+      "root": "Order",
+      "description": "items[2].price.amount is a tstr: the REQ-RT-065 example shape",
+      "requirements": ["REQ-RT-060", "REQ-RT-065", "REQ-RT-066"],
+      "derivation": "hand-encoded",
+      "input": {"cbor": "a262696401656974656d7383a263736b756161657072696365a266616d6f756e74016863757272656e637963455552a263736b756161657072696365a266616d6f756e74016863757272656e637963455552a263736b756161657072696365a266616d6f756e7461786863757272656e637963455552"},
+      "classification": "schema_invalid",
+      "error": {"kind": "type_mismatch", "path": "items[2].price.amount"}
+    },
+    {
+      "id": "nested/deep_missing_field",
+      "root": "Order",
+      "description": "items[1] has no sku",
+      "requirements": ["REQ-RT-060", "REQ-RT-065", "REQ-RT-066"],
+      "derivation": "hand-encoded",
+      "input": {"cbor": "a262696401656974656d7382a263736b756161657072696365a266616d6f756e74016863757272656e637963455552a1657072696365a266616d6f756e74016863757272656e637963455552"},
+      "classification": "schema_invalid",
+      "error": {"kind": "missing_field", "path": "items[1].sku"}
+    },
+    {
+      "id": "nested/json_deep_type_mismatch",
+      "root": "Order",
+      "description": "items[1].price.amount is not an integer",
+      "requirements": ["REQ-RT-065", "REQ-RT-066", "REQ-RT-070"],
+      "derivation": "hand-encoded",
+      "input": {"json": "{\"id\":1,\"items\":[{\"sku\":\"a\",\"price\":{\"amount\":1,\"currency\":\"EUR\"}},{\"sku\":\"b\",\"price\":{\"amount\":\"x\",\"currency\":\"EUR\"}}]}"},
+      "classification": "schema_invalid",
+      "error": {"kind": "type_mismatch", "path": "items[1].price.amount"}
+    }
+  ]
+}

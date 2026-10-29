@@ -1,0 +1,44 @@
+{
+  "$schema": "../../manifest.schema.json",
+  "manifest_version": 1,
+  "schema": "primitives.cddl",
+  "kind": "noncanonical",
+  "cases": [
+    {
+      "id": "primitives/double_as_float64",
+      "root": "Primitives",
+      "description": "1.5 in a float64 field written as 8 bytes",
+      "requirements": ["REQ-RT-160", "REQ-RT-180"],
+      "derivation": "hand-encoded",
+      "variance": "wider_float",
+      "input": {"cbor": "a864666c6167f46468616c66f900006474657874606562797465734066646f75626c65fb3ff8000000000000667369676e6564006673696e676c65f9000068756e7369676e656400"},
+      "value": {"map": [[{"tstr": "flag"}, {"bool": false}], [{"tstr": "half"}, {"f16": "0"}], [{"tstr": "text"}, {"tstr": ""}], [{"tstr": "bytes"}, {"bstr": ""}], [{"tstr": "double"}, {"f64": "1.5"}], [{"tstr": "signed"}, {"int": "0"}], [{"tstr": "single"}, {"f32": "0"}], [{"tstr": "unsigned"}, {"uint": "0"}]]},
+      "cbor": "a864666c6167f46468616c66f900006474657874606562797465734066646f75626c65f93e00667369676e6564006673696e676c65f9000068756e7369676e656400",
+      "json": "{\"flag\":false,\"half\":0,\"text\":\"\",\"bytes\":\"\",\"double\":1.5,\"signed\":0,\"single\":0,\"unsigned\":0}"
+    },
+    {
+      "id": "primitives/single_as_float32",
+      "root": "Primitives",
+      "description": "100000.0 in a float32 field written as the 4-byte form it already needs, with half written as float32 zero",
+      "requirements": ["REQ-RT-160", "REQ-RT-180"],
+      "derivation": "hand-encoded",
+      "variance": "wider_float",
+      "input": {"cbor": "a864666c6167f46468616c66fa000000006474657874606562797465734066646f75626c65f90000667369676e6564006673696e676c65fa47c3500068756e7369676e656400"},
+      "value": {"map": [[{"tstr": "flag"}, {"bool": false}], [{"tstr": "half"}, {"f16": "0"}], [{"tstr": "text"}, {"tstr": ""}], [{"tstr": "bytes"}, {"bstr": ""}], [{"tstr": "double"}, {"f64": "0"}], [{"tstr": "signed"}, {"int": "0"}], [{"tstr": "single"}, {"f32": "100000"}], [{"tstr": "unsigned"}, {"uint": "0"}]]},
+      "cbor": "a864666c6167f46468616c66f900006474657874606562797465734066646f75626c65f90000667369676e6564006673696e676c65fa47c3500068756e7369676e656400",
+      "json": "{\"flag\":false,\"half\":0,\"text\":\"\",\"bytes\":\"\",\"double\":0,\"signed\":0,\"single\":100000,\"unsigned\":0}"
+    },
+    {
+      "id": "primitives/half_as_float64",
+      "root": "Primitives",
+      "description": "0.0 in the float16 field written as float64",
+      "requirements": ["REQ-RT-180"],
+      "derivation": "hand-encoded",
+      "variance": "wider_float",
+      "input": {"cbor": "a864666c6167f46468616c66fb00000000000000006474657874606562797465734066646f75626c65f90000667369676e6564006673696e676c65f9000068756e7369676e656400"},
+      "value": {"map": [[{"tstr": "flag"}, {"bool": false}], [{"tstr": "half"}, {"f16": "0"}], [{"tstr": "text"}, {"tstr": ""}], [{"tstr": "bytes"}, {"bstr": ""}], [{"tstr": "double"}, {"f64": "0"}], [{"tstr": "signed"}, {"int": "0"}], [{"tstr": "single"}, {"f32": "0"}], [{"tstr": "unsigned"}, {"uint": "0"}]]},
+      "cbor": "a864666c6167f46468616c66f900006474657874606562797465734066646f75626c65f90000667369676e6564006673696e676c65f9000068756e7369676e656400",
+      "json": "{\"flag\":false,\"half\":0,\"text\":\"\",\"bytes\":\"\",\"double\":0,\"signed\":0,\"single\":0,\"unsigned\":0}"
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "$schema": "../../manifest.schema.json",
+  "manifest_version": 1,
+  "schema": "array_fixed.cddl",
+  "kind": "negative",
+  "cases": [
+    {
+      "id": "array_fixed/too_few_elements",
+      "root": "Triple",
+      "description": "one element where two are required: fewer than declared stays an error",
+      "requirements": ["REQ-COMPAT-060", "REQ-RT-060"],
+      "derivation": "hand-encoded",
+      "input": {"cbor": "8101"},
+      "classification": "schema_invalid",
+      "error": {"kind": "wrong_length", "path": ""}
+    },
+    {
+      "id": "array_fixed/empty",
+      "root": "Triple",
+      "description": "no elements",
+      "requirements": ["REQ-COMPAT-060", "REQ-RT-060"],
+      "derivation": "hand-encoded",
+      "input": {"cbor": "80"},
+      "classification": "schema_invalid",
+      "error": {"kind": "wrong_length", "path": ""}
+    },
+    {
+      "id": "array_fixed/second_is_uint",
+      "root": "Triple",
+      "description": "the tstr position holds an integer",
+      "requirements": ["REQ-RT-060", "REQ-RT-066"],
+      "derivation": "hand-encoded",
+      "input": {"cbor": "820102"},
+      "classification": "schema_invalid",
+      "error": {"kind": "type_mismatch", "path": "[1]"}
+    },
+    {
+      "id": "array_fixed/optional_is_uint",
+      "root": "Triple",
+      "description": "the optional bool position holds 1",
+      "requirements": ["REQ-RT-060", "REQ-RT-066"],
+      "derivation": "hand-encoded",
+      "input": {"cbor": "8301617801"},
+      "classification": "schema_invalid",
+      "error": {"kind": "type_mismatch", "path": "[2]"}
+    },
+    {
+      "id": "array_fixed/json_too_few",
+      "root": "Triple",
+      "description": "one element where two are required",
+      "requirements": ["REQ-COMPAT-060", "REQ-RT-070"],
+      "derivation": "hand-encoded",
+      "input": {"json": "[1]"},
+      "classification": "schema_invalid",
+      "error": {"kind": "wrong_length", "path": ""}
+    }
+  ]
+}
