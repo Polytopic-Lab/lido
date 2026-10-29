@@ -1,0 +1,44 @@
+{
+  "$schema": "../../manifest.schema.json",
+  "manifest_version": 1,
+  "schema": "optional_default.cddl",
+  "kind": "noncanonical",
+  "cases": [
+    {
+      "id": "optional_default/absent_cbor",
+      "root": "Settings",
+      "description": "an empty map: retries is populated with its default 3, and re-encoding writes it",
+      "requirements": ["REQ-RT-080", "REQ-RT-190"],
+      "derivation": "hand-encoded",
+      "variance": "absent_default",
+      "input": {"cbor": "a0"},
+      "value": {"map": [[{"tstr": "retries"}, {"uint": "3"}]]},
+      "cbor": "a1677265747269657303",
+      "json": "{\"retries\":3}"
+    },
+    {
+      "id": "optional_default/absent_json",
+      "root": "Settings",
+      "description": "{}: retries is populated with its default 3",
+      "requirements": ["REQ-RT-080", "REQ-RT-190"],
+      "derivation": "hand-encoded",
+      "variance": "absent_default",
+      "input": {"json": "{}"},
+      "value": {"map": [[{"tstr": "retries"}, {"uint": "3"}]]},
+      "cbor": "a1677265747269657303",
+      "json": "{\"retries\":3}"
+    },
+    {
+      "id": "optional_default/nickname_only_cbor",
+      "root": "Settings",
+      "description": "only nickname present: retries defaults, note stays absent",
+      "requirements": ["REQ-RT-080", "REQ-RT-320"],
+      "derivation": "hand-encoded",
+      "variance": "absent_default",
+      "input": {"cbor": "a1686e69636b6e616d65616e"},
+      "value": {"map": [[{"tstr": "retries"}, {"uint": "3"}], [{"tstr": "nickname"}, {"tstr": "n"}]]},
+      "cbor": "a2677265747269657303686e69636b6e616d65616e",
+      "json": "{\"retries\":3,\"nickname\":\"n\"}"
+    }
+  ]
+}

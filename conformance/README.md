@@ -19,7 +19,7 @@ conformance/
 ├── index.json                every schema file and every case file
 ├── construct-coverage.json   specs.md §3 construct -> schema
 ├── schemas/<name>.cddl       one construct group per file
-├── cases/<kind>/<name>.json  one file per (schema, kind)
+├── cases/<kind>/<name>.json  one file per (schema, kind); kinds below
 └── tools/                    check_corpus.py, cborcheck.py, test_cborcheck.py, requirements.txt
 ```
 
@@ -85,6 +85,59 @@ alter an expected value. Choices and enumerations have no tag: a choice is
 a single-entry `map` (REQ-RT-360) and an enumeration is its literal
 (REQ-RT-385). An absent optional field is simply missing from `map`; an
 explicit null is `{"null": null}` (REQ-RT-330).
+
+## Negative, non-canonical and encode-error cases
+
+Besides `positive`, three kinds exist (`evolution` is still reserved, slice
+1.4). All share `id`, `root`, `description`, `requirements` and `derivation`
+with the positive record. A decode input is an object `input` with exactly one
+member, `cbor` (hex, possibly empty) or `json` (exact text, possibly empty).
+
+**`negative`** — a decode that must fail. Fields `input`, `classification`,
+`error`.
+
+- `classification` is `malformed` or `schema_invalid`. **`malformed` means a
+  strict generic CBOR/JSON decoder rejects the input** — not well-formed (RFC
+  8949 §1.2), *or* well-formed but with text that is not UTF-8 or a map with a
+  duplicate key (REQ-RT-300/315). `schema_invalid` means the input is
+  well-formed and valid generic data that is simply not an instance of `root`.
+  (RFC 8949 would call the former "invalid"; here the word covers both.)
+- `error.kind`: for `malformed`, one of `truncated`, `trailing_data`,
+  `syntax`, `invalid_utf8`, `duplicate_key`; for `schema_invalid`, one of
+  `type_mismatch`, `missing_field`, `null_not_allowed`, `unknown_discriminant`,
+  `invalid_choice`, `out_of_range`, `wrong_length`, `bad_key`.
+- `error.path` (required for `schema_invalid`, absent for `malformed`) follows
+  REQ-RT-066: `""` is the root, `items[2].price`, `[1]`, `stock[7].qty`,
+  `scores["a"]`; an integer-keyed field is its decimal key. A path resolves in
+  the input (for `missing_field`: its parent does and it does not).
+  Optional `discriminant` (REQ-RT-380) and `constraint` (`"0..255"`, as written
+  in the schema).
+- **Not pinned**: error message text, byte offset, line and column. Harnesses
+  compare `classification`, `error.kind` and `error.path` only.
+
+**`noncanonical`** — an input a decoder must accept. `variance` names how it
+departs from canonical form (`indefinite_length`, `unsorted_keys`,
+`non_shortest_head`, `wider_float`, `non_canonical_nan`, `whitespace`,
+`string_escapes`, `number_spelling`, `int_as_string`, `int_as_number`,
+`base64_padding`, `member_order`, `absent_default`); `value`, `cbor`, `json`
+are the canonical vector for the value the input decodes to (`json` is omitted
+only when the value has no JSON form: NaN). Pairs of a map in `value` are in
+canonical order even when the input is not.
+
+**`encode_error`** — an encode that must fail in at least one encoding.
+`value` is encoded; `expect.cbor` and `expect.json` are each the exact expected
+output or `{"error": {"kind", "path", ...}}` with `kind` `not_representable`
+(REQ-RT-210, 255) or `out_of_range` (REQ-RT-250). The other encoding, if it
+succeeds, still gives exactly its output (NaN encodes to CBOR `f97e00`).
+
+How these are confirmed: a `malformed` input must be rejected by `cborcheck`'s
+well-formedness and validity analysis and, except for duplicate keys (which
+`cbor2` keeps), by `cbor2` too; a `schema_invalid` input must be accepted by
+both. JSON uses a strict parser. A non-canonical CBOR input must be valid,
+decode to `value`, and exhibit the departure its `variance` names; a JSON one
+must equal the canonical text after exactly that relaxation. What cannot be
+confirmed without a CDDL validator is that a `schema_invalid` input really is
+not an instance of its `root`; the path and range checks narrow that gap.
 
 ## Schemas and construct coverage
 

@@ -1,0 +1,68 @@
+{
+  "$schema": "../../manifest.schema.json",
+  "manifest_version": 1,
+  "schema": "array_homogeneous.cddl",
+  "kind": "negative",
+  "cases": [
+    {
+      "id": "array_homogeneous/element_is_text",
+      "root": "Numbers",
+      "description": "the second element is a tstr",
+      "requirements": ["REQ-RT-060", "REQ-RT-066"],
+      "derivation": "hand-encoded",
+      "input": {"cbor": "8301617803"},
+      "classification": "schema_invalid",
+      "error": {"kind": "type_mismatch", "path": "[1]"}
+    },
+    {
+      "id": "array_homogeneous/element_is_float",
+      "root": "Numbers",
+      "description": "an element is 1.5",
+      "requirements": ["REQ-RT-060"],
+      "derivation": "hand-encoded",
+      "input": {"cbor": "81f93e00"},
+      "classification": "schema_invalid",
+      "error": {"kind": "type_mismatch", "path": "[0]"}
+    },
+    {
+      "id": "array_homogeneous/root_is_map",
+      "root": "Numbers",
+      "description": "a map where an array is required",
+      "requirements": ["REQ-RT-060"],
+      "derivation": "hand-encoded",
+      "input": {"cbor": "a0"},
+      "classification": "schema_invalid",
+      "error": {"kind": "type_mismatch", "path": ""}
+    },
+    {
+      "id": "array_homogeneous/polyline_missing_y",
+      "root": "Polyline",
+      "description": "a point without y",
+      "requirements": ["REQ-RT-060", "REQ-RT-066"],
+      "derivation": "hand-encoded",
+      "input": {"cbor": "81a1617801"},
+      "classification": "schema_invalid",
+      "error": {"kind": "missing_field", "path": "[0].y"}
+    },
+    {
+      "id": "array_homogeneous/polyline_y_is_text",
+      "root": "Polyline",
+      "description": "y holds a tstr",
+      "requirements": ["REQ-RT-060", "REQ-RT-066"],
+      "derivation": "hand-encoded",
+      "input": {"cbor": "81a261780161796161"},
+      "classification": "schema_invalid",
+      "error": {"kind": "type_mismatch", "path": "[0].y"}
+    },
+    {
+      "id": "array_homogeneous/json_element_is_text",
+      "root": "Numbers",
+      "description": "a JSON element that is not a decimal integer",
+      "requirements": ["REQ-RT-066", "REQ-RT-070"],
+      "derivation": "hand-encoded",
+      "input": {"json": "[1,\"x\",3]"},
+      "classification": "schema_invalid",
+      "error": {"kind": "type_mismatch", "path": "[1]"}
+    }
+  ]
+}

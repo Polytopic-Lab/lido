@@ -1,0 +1,108 @@
+{
+  "$schema": "../../manifest.schema.json",
+  "manifest_version": 1,
+  "schema": "choice.cddl",
+  "kind": "negative",
+  "cases": [
+    {
+      "id": "choice/two_entries",
+      "root": "Shape",
+      "description": "a choice map with two entries",
+      "requirements": ["REQ-RT-360", "REQ-RT-380"],
+      "derivation": "hand-encoded",
+      "input": {"cbor": "a266436972636c65a1667261646975730566537175617265a1647369646502"},
+      "classification": "schema_invalid",
+      "error": {"kind": "invalid_choice", "path": ""}
+    },
+    {
+      "id": "choice/zero_entries",
+      "root": "Shape",
+      "description": "an empty choice map",
+      "requirements": ["REQ-RT-380"],
+      "derivation": "hand-encoded",
+      "input": {"cbor": "a0"},
+      "classification": "schema_invalid",
+      "error": {"kind": "invalid_choice", "path": ""}
+    },
+    {
+      "id": "choice/unknown_discriminant",
+      "root": "Shape",
+      "description": "a discriminant no alternative has",
+      "requirements": ["REQ-RT-060", "REQ-RT-380"],
+      "derivation": "hand-encoded",
+      "input": {"cbor": "a168547269616e676c65a16672616469757305"},
+      "classification": "schema_invalid",
+      "error": {"kind": "unknown_discriminant", "path": "", "discriminant": "Triangle"}
+    },
+    {
+      "id": "choice/discriminant_wrong_case",
+      "root": "Shape",
+      "description": "alternatives are matched exactly: circle is not Circle",
+      "requirements": ["REQ-RT-380"],
+      "derivation": "hand-encoded",
+      "input": {"cbor": "a166636972636c65a16672616469757305"},
+      "classification": "schema_invalid",
+      "error": {"kind": "unknown_discriminant", "path": "", "discriminant": "circle"}
+    },
+    {
+      "id": "choice/discriminant_is_uint",
+      "root": "Shape",
+      "description": "an integer discriminant where text names are required",
+      "requirements": ["REQ-RT-370", "REQ-RT-380"],
+      "derivation": "hand-encoded",
+      "input": {"cbor": "a101a16672616469757305"},
+      "classification": "schema_invalid",
+      "error": {"kind": "unknown_discriminant", "path": "", "discriminant": "1"}
+    },
+    {
+      "id": "choice/body_is_uint",
+      "root": "Shape",
+      "description": "the selected alternative's value has the wrong type; the discriminant is a path segment",
+      "requirements": ["REQ-RT-060", "REQ-RT-066"],
+      "derivation": "hand-encoded",
+      "input": {"cbor": "a166436972636c6505"},
+      "classification": "schema_invalid",
+      "error": {"kind": "type_mismatch", "path": "Circle"}
+    },
+    {
+      "id": "choice/body_missing_field",
+      "root": "Shape",
+      "description": "Circle without radius",
+      "requirements": ["REQ-RT-060", "REQ-RT-066"],
+      "derivation": "hand-encoded",
+      "input": {"cbor": "a166436972636c65a0"},
+      "classification": "schema_invalid",
+      "error": {"kind": "missing_field", "path": "Circle.radius"}
+    },
+    {
+      "id": "choice/root_is_array",
+      "root": "Shape",
+      "description": "an array where a choice map is required",
+      "requirements": ["REQ-RT-060", "REQ-RT-380"],
+      "derivation": "hand-encoded",
+      "input": {"cbor": "80"},
+      "classification": "schema_invalid",
+      "error": {"kind": "type_mismatch", "path": ""}
+    },
+    {
+      "id": "choice/json_two_members",
+      "root": "Shape",
+      "description": "a choice object with two members",
+      "requirements": ["REQ-RT-070", "REQ-RT-380"],
+      "derivation": "hand-encoded",
+      "input": {"json": "{\"Circle\":{\"radius\":1},\"Square\":{\"side\":1}}"},
+      "classification": "schema_invalid",
+      "error": {"kind": "invalid_choice", "path": ""}
+    },
+    {
+      "id": "choice/json_unknown_discriminant",
+      "root": "Shape",
+      "description": "a discriminant no alternative has",
+      "requirements": ["REQ-RT-070", "REQ-RT-380"],
+      "derivation": "hand-encoded",
+      "input": {"json": "{\"Triangle\":{}}"},
+      "classification": "schema_invalid",
+      "error": {"kind": "unknown_discriminant", "path": "", "discriminant": "Triangle"}
+    }
+  ]
+}

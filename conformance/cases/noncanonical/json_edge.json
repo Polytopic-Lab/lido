@@ -1,0 +1,160 @@
+{
+  "$schema": "../../manifest.schema.json",
+  "manifest_version": 1,
+  "schema": "json_edge.cddl",
+  "kind": "noncanonical",
+  "cases": [
+    {
+      "id": "json_edge/ratio_nan_as_float64",
+      "root": "Edge",
+      "description": "NaN written as a float64 (RFC 8949 Appendix A); canonical is f97e00",
+      "requirements": ["REQ-RT-172", "REQ-RT-180"],
+      "derivation": "rfc8949-appendix-a",
+      "variance": "non_canonical_nan",
+      "input": {"cbor": "a4636269670064626c6f624065726174696ffb7ff8000000000000667369676e656400"},
+      "value": {"map": [[{"tstr": "big"}, {"uint": "0"}], [{"tstr": "blob"}, {"bstr": ""}], [{"tstr": "ratio"}, {"f64": "NaN"}], [{"tstr": "signed"}, {"int": "0"}]]},
+      "cbor": "a4636269670064626c6f624065726174696ff97e00667369676e656400"
+    },
+    {
+      "id": "json_edge/ratio_nan_as_float32",
+      "root": "Edge",
+      "description": "NaN written as a float32 (RFC 8949 Appendix A)",
+      "requirements": ["REQ-RT-172", "REQ-RT-180"],
+      "derivation": "rfc8949-appendix-a",
+      "variance": "non_canonical_nan",
+      "input": {"cbor": "a4636269670064626c6f624065726174696ffa7fc00000667369676e656400"},
+      "value": {"map": [[{"tstr": "big"}, {"uint": "0"}], [{"tstr": "blob"}, {"bstr": ""}], [{"tstr": "ratio"}, {"f64": "NaN"}], [{"tstr": "signed"}, {"int": "0"}]]},
+      "cbor": "a4636269670064626c6f624065726174696ff97e00667369676e656400"
+    },
+    {
+      "id": "json_edge/ratio_nan_with_payload",
+      "root": "Edge",
+      "description": "a NaN with payload bits set",
+      "requirements": ["REQ-RT-172"],
+      "derivation": "hand-encoded",
+      "variance": "non_canonical_nan",
+      "input": {"cbor": "a4636269670064626c6f624065726174696ff97e01667369676e656400"},
+      "value": {"map": [[{"tstr": "big"}, {"uint": "0"}], [{"tstr": "blob"}, {"bstr": ""}], [{"tstr": "ratio"}, {"f64": "NaN"}], [{"tstr": "signed"}, {"int": "0"}]]},
+      "cbor": "a4636269670064626c6f624065726174696ff97e00667369676e656400"
+    },
+    {
+      "id": "json_edge/ratio_nan_negative",
+      "root": "Edge",
+      "description": "a NaN with the sign bit set",
+      "requirements": ["REQ-RT-172"],
+      "derivation": "hand-encoded",
+      "variance": "non_canonical_nan",
+      "input": {"cbor": "a4636269670064626c6f624065726174696ff9fe00667369676e656400"},
+      "value": {"map": [[{"tstr": "big"}, {"uint": "0"}], [{"tstr": "blob"}, {"bstr": ""}], [{"tstr": "ratio"}, {"f64": "NaN"}], [{"tstr": "signed"}, {"int": "0"}]]},
+      "cbor": "a4636269670064626c6f624065726174696ff97e00667369676e656400"
+    },
+    {
+      "id": "json_edge/blob_chunked",
+      "root": "Edge",
+      "description": "blob fbef as the chunked byte string (_ h'fb', h'ef')",
+      "requirements": ["REQ-RT-180"],
+      "derivation": "hand-encoded",
+      "variance": "indefinite_length",
+      "input": {"cbor": "a4636269670064626c6f625f41fb41efff65726174696ff90000667369676e656400"},
+      "value": {"map": [[{"tstr": "big"}, {"uint": "0"}], [{"tstr": "blob"}, {"bstr": "fbef"}], [{"tstr": "ratio"}, {"f64": "0"}], [{"tstr": "signed"}, {"int": "0"}]]},
+      "cbor": "a4636269670064626c6f6242fbef65726174696ff90000667369676e656400",
+      "json": "{\"big\":0,\"blob\":\"--8\",\"ratio\":0,\"signed\":0}"
+    },
+    {
+      "id": "json_edge/json_ratio_spelled_1_50",
+      "root": "Edge",
+      "description": "1.5 written as 1.50",
+      "requirements": ["REQ-RT-178"],
+      "derivation": "hand-encoded",
+      "variance": "number_spelling",
+      "input": {"json": "{\"big\":0,\"blob\":\"\",\"ratio\":1.50,\"signed\":0}"},
+      "value": {"map": [[{"tstr": "big"}, {"uint": "0"}], [{"tstr": "blob"}, {"bstr": ""}], [{"tstr": "ratio"}, {"f64": "1.5"}], [{"tstr": "signed"}, {"int": "0"}]]},
+      "cbor": "a4636269670064626c6f624065726174696ff93e00667369676e656400",
+      "json": "{\"big\":0,\"blob\":\"\",\"ratio\":1.5,\"signed\":0}"
+    },
+    {
+      "id": "json_edge/json_ratio_spelled_exponent",
+      "root": "Edge",
+      "description": "1.5 written as 15e-1",
+      "requirements": ["REQ-RT-178"],
+      "derivation": "hand-encoded",
+      "variance": "number_spelling",
+      "input": {"json": "{\"big\":0,\"blob\":\"\",\"ratio\":15e-1,\"signed\":0}"},
+      "value": {"map": [[{"tstr": "big"}, {"uint": "0"}], [{"tstr": "blob"}, {"bstr": ""}], [{"tstr": "ratio"}, {"f64": "1.5"}], [{"tstr": "signed"}, {"int": "0"}]]},
+      "cbor": "a4636269670064626c6f624065726174696ff93e00667369676e656400",
+      "json": "{\"big\":0,\"blob\":\"\",\"ratio\":1.5,\"signed\":0}"
+    },
+    {
+      "id": "json_edge/json_ratio_integral_with_fraction",
+      "root": "Edge",
+      "description": "1 written as 1.0",
+      "requirements": ["REQ-RT-178"],
+      "derivation": "hand-encoded",
+      "variance": "number_spelling",
+      "input": {"json": "{\"big\":0,\"blob\":\"\",\"ratio\":1.0,\"signed\":0}"},
+      "value": {"map": [[{"tstr": "big"}, {"uint": "0"}], [{"tstr": "blob"}, {"bstr": ""}], [{"tstr": "ratio"}, {"f64": "1"}], [{"tstr": "signed"}, {"int": "0"}]]},
+      "cbor": "a4636269670064626c6f624065726174696ff93c00667369676e656400",
+      "json": "{\"big\":0,\"blob\":\"\",\"ratio\":1,\"signed\":0}"
+    },
+    {
+      "id": "json_edge/json_ratio_large_positional",
+      "root": "Edge",
+      "description": "1e+21 written positionally",
+      "requirements": ["REQ-RT-178"],
+      "derivation": "hand-encoded",
+      "variance": "number_spelling",
+      "input": {"json": "{\"big\":0,\"blob\":\"\",\"ratio\":1000000000000000000000,\"signed\":0}"},
+      "value": {"map": [[{"tstr": "big"}, {"uint": "0"}], [{"tstr": "blob"}, {"bstr": ""}], [{"tstr": "ratio"}, {"f64": "1e+21"}], [{"tstr": "signed"}, {"int": "0"}]]},
+      "cbor": "a4636269670064626c6f624065726174696ffb444b1ae4d6e2ef50667369676e656400",
+      "json": "{\"big\":0,\"blob\":\"\",\"ratio\":1e+21,\"signed\":0}"
+    },
+    {
+      "id": "json_edge/json_big_as_string",
+      "root": "Edge",
+      "description": "5 written as a string",
+      "requirements": ["REQ-RT-220"],
+      "derivation": "hand-encoded",
+      "variance": "int_as_string",
+      "input": {"json": "{\"big\":\"5\",\"blob\":\"\",\"ratio\":0,\"signed\":\"-5\"}"},
+      "value": {"map": [[{"tstr": "big"}, {"uint": "5"}], [{"tstr": "blob"}, {"bstr": ""}], [{"tstr": "ratio"}, {"f64": "0"}], [{"tstr": "signed"}, {"int": "-5"}]]},
+      "cbor": "a4636269670564626c6f624065726174696ff90000667369676e656424",
+      "json": "{\"big\":5,\"blob\":\"\",\"ratio\":0,\"signed\":-5}"
+    },
+    {
+      "id": "json_edge/json_big_as_number",
+      "root": "Edge",
+      "description": "2^53+1 written as a JSON number: accepted, though canonical output is a string",
+      "requirements": ["REQ-RT-220"],
+      "derivation": "hand-encoded",
+      "variance": "int_as_number",
+      "input": {"json": "{\"big\":9007199254740993,\"blob\":\"\",\"ratio\":0,\"signed\":0}"},
+      "value": {"map": [[{"tstr": "big"}, {"uint": "9007199254740993"}], [{"tstr": "blob"}, {"bstr": ""}], [{"tstr": "ratio"}, {"f64": "0"}], [{"tstr": "signed"}, {"int": "0"}]]},
+      "cbor": "a4636269671b002000000000000164626c6f624065726174696ff90000667369676e656400",
+      "json": "{\"big\":\"9007199254740993\",\"blob\":\"\",\"ratio\":0,\"signed\":0}"
+    },
+    {
+      "id": "json_edge/json_blob_padded_one_byte",
+      "root": "Edge",
+      "description": "ff as _w==",
+      "requirements": ["REQ-RT-200"],
+      "derivation": "hand-encoded",
+      "variance": "base64_padding",
+      "input": {"json": "{\"big\":0,\"blob\":\"_w==\",\"ratio\":0,\"signed\":0}"},
+      "value": {"map": [[{"tstr": "big"}, {"uint": "0"}], [{"tstr": "blob"}, {"bstr": "ff"}], [{"tstr": "ratio"}, {"f64": "0"}], [{"tstr": "signed"}, {"int": "0"}]]},
+      "cbor": "a4636269670064626c6f6241ff65726174696ff90000667369676e656400",
+      "json": "{\"big\":0,\"blob\":\"_w\",\"ratio\":0,\"signed\":0}"
+    },
+    {
+      "id": "json_edge/json_blob_padded_two_bytes",
+      "root": "Edge",
+      "description": "fbef as --8=",
+      "requirements": ["REQ-RT-200"],
+      "derivation": "hand-encoded",
+      "variance": "base64_padding",
+      "input": {"json": "{\"big\":0,\"blob\":\"--8=\",\"ratio\":0,\"signed\":0}"},
+      "value": {"map": [[{"tstr": "big"}, {"uint": "0"}], [{"tstr": "blob"}, {"bstr": "fbef"}], [{"tstr": "ratio"}, {"f64": "0"}], [{"tstr": "signed"}, {"int": "0"}]]},
+      "cbor": "a4636269670064626c6f6242fbef65726174696ff90000667369676e656400",
+      "json": "{\"big\":0,\"blob\":\"--8\",\"ratio\":0,\"signed\":0}"
+    }
+  ]
+}

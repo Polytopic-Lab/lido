@@ -1,0 +1,62 @@
+{
+  "$schema": "../../manifest.schema.json",
+  "manifest_version": 1,
+  "schema": "primitives.cddl",
+  "kind": "encode_error",
+  "cases": [
+    {
+      "id": "primitives/half_not_representable",
+      "root": "Primitives",
+      "description": "1.1 is not a half-precision value, so a float16 field cannot hold it",
+      "requirements": ["REQ-GEN-140", "REQ-RT-255"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "flag"}, {"bool": false}], [{"tstr": "half"}, {"f16": "1.099999905"}], [{"tstr": "text"}, {"tstr": ""}], [{"tstr": "bytes"}, {"bstr": ""}], [{"tstr": "double"}, {"f64": "0"}], [{"tstr": "signed"}, {"int": "0"}], [{"tstr": "single"}, {"f32": "0"}], [{"tstr": "unsigned"}, {"uint": "0"}]]},
+      "expect": {"cbor": {"error": {"kind": "not_representable", "path": "half"}}, "json": {"error": {"kind": "not_representable", "path": "half"}}}
+    },
+    {
+      "id": "primitives/half_above_max",
+      "root": "Primitives",
+      "description": "65505 exceeds the largest half and is not exactly representable",
+      "requirements": ["REQ-RT-255"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "flag"}, {"bool": false}], [{"tstr": "half"}, {"f16": "65505"}], [{"tstr": "text"}, {"tstr": ""}], [{"tstr": "bytes"}, {"bstr": ""}], [{"tstr": "double"}, {"f64": "0"}], [{"tstr": "signed"}, {"int": "0"}], [{"tstr": "single"}, {"f32": "0"}], [{"tstr": "unsigned"}, {"uint": "0"}]]},
+      "expect": {"cbor": {"error": {"kind": "not_representable", "path": "half"}}, "json": {"error": {"kind": "not_representable", "path": "half"}}}
+    },
+    {
+      "id": "primitives/half_below_min_subnormal",
+      "root": "Primitives",
+      "description": "1e-8 is below the smallest half subnormal",
+      "requirements": ["REQ-RT-255"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "flag"}, {"bool": false}], [{"tstr": "half"}, {"f16": "1e-08"}], [{"tstr": "text"}, {"tstr": ""}], [{"tstr": "bytes"}, {"bstr": ""}], [{"tstr": "double"}, {"f64": "0"}], [{"tstr": "signed"}, {"int": "0"}], [{"tstr": "single"}, {"f32": "0"}], [{"tstr": "unsigned"}, {"uint": "0"}]]},
+      "expect": {"cbor": {"error": {"kind": "not_representable", "path": "half"}}, "json": {"error": {"kind": "not_representable", "path": "half"}}}
+    },
+    {
+      "id": "primitives/half_infinity_is_representable",
+      "root": "Primitives",
+      "description": "+Infinity in a float16 field: CBOR succeeds, JSON has no form",
+      "requirements": ["REQ-RT-210", "REQ-RT-255"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "flag"}, {"bool": false}], [{"tstr": "half"}, {"f16": "Infinity"}], [{"tstr": "text"}, {"tstr": ""}], [{"tstr": "bytes"}, {"bstr": ""}], [{"tstr": "double"}, {"f64": "0"}], [{"tstr": "signed"}, {"int": "0"}], [{"tstr": "single"}, {"f32": "0"}], [{"tstr": "unsigned"}, {"uint": "0"}]]},
+      "expect": {"cbor": "a864666c6167f46468616c66f97c006474657874606562797465734066646f75626c65f90000667369676e6564006673696e676c65f9000068756e7369676e656400", "json": {"error": {"kind": "not_representable", "path": "half"}}}
+    },
+    {
+      "id": "primitives/single_nan",
+      "root": "Primitives",
+      "description": "NaN in a float32 field: CBOR f97e00, JSON has no form",
+      "requirements": ["REQ-RT-172", "REQ-RT-210"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "flag"}, {"bool": false}], [{"tstr": "half"}, {"f16": "0"}], [{"tstr": "text"}, {"tstr": ""}], [{"tstr": "bytes"}, {"bstr": ""}], [{"tstr": "double"}, {"f64": "0"}], [{"tstr": "signed"}, {"int": "0"}], [{"tstr": "single"}, {"f32": "NaN"}], [{"tstr": "unsigned"}, {"uint": "0"}]]},
+      "expect": {"cbor": "a864666c6167f46468616c66f900006474657874606562797465734066646f75626c65f90000667369676e6564006673696e676c65f97e0068756e7369676e656400", "json": {"error": {"kind": "not_representable", "path": "single"}}}
+    },
+    {
+      "id": "primitives/double_negative_infinity",
+      "root": "Primitives",
+      "description": "-Infinity in a float64 field",
+      "requirements": ["REQ-RT-210"],
+      "derivation": "cbor2",
+      "value": {"map": [[{"tstr": "flag"}, {"bool": false}], [{"tstr": "half"}, {"f16": "0"}], [{"tstr": "text"}, {"tstr": ""}], [{"tstr": "bytes"}, {"bstr": ""}], [{"tstr": "double"}, {"f64": "-Infinity"}], [{"tstr": "signed"}, {"int": "0"}], [{"tstr": "single"}, {"f32": "0"}], [{"tstr": "unsigned"}, {"uint": "0"}]]},
+      "expect": {"cbor": "a864666c6167f46468616c66f900006474657874606562797465734066646f75626c65f9fc00667369676e6564006673696e676c65f9000068756e7369676e656400", "json": {"error": {"kind": "not_representable", "path": "double"}}}
+    }
+  ]
+}

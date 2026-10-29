@@ -1,0 +1,32 @@
+{
+  "$schema": "../../manifest.schema.json",
+  "manifest_version": 1,
+  "schema": "struct_uint_keys.cddl",
+  "kind": "noncanonical",
+  "cases": [
+    {
+      "id": "struct_uint_keys/header_keys_declaration_order",
+      "root": "Header",
+      "description": "keys 9, 1, 2 as declared",
+      "requirements": ["REQ-RT-165", "REQ-RT-180"],
+      "derivation": "hand-encoded",
+      "variance": "unsorted_keys",
+      "input": {"cbor": "a309617801000240"},
+      "value": {"map": [[{"uint": "1"}, {"int": "0"}], [{"uint": "2"}, {"bstr": ""}], [{"uint": "9"}, {"tstr": "x"}]]},
+      "cbor": "a301000240096178",
+      "json": "{\"1\":0,\"2\":\"\",\"9\":\"x\"}"
+    },
+    {
+      "id": "struct_uint_keys/json_member_order",
+      "root": "Header",
+      "description": "member names \"9\",\"2\",\"1\"",
+      "requirements": ["REQ-RT-176", "REQ-RT-230"],
+      "derivation": "hand-encoded",
+      "variance": "member_order",
+      "input": {"json": "{\"9\":\"x\",\"2\":\"\",\"1\":0}"},
+      "value": {"map": [[{"uint": "1"}, {"int": "0"}], [{"uint": "2"}, {"bstr": ""}], [{"uint": "9"}, {"tstr": "x"}]]},
+      "cbor": "a301000240096178",
+      "json": "{\"1\":0,\"2\":\"\",\"9\":\"x\"}"
+    }
+  ]
+}

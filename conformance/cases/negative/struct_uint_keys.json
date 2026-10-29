@@ -1,0 +1,68 @@
+{
+  "$schema": "../../manifest.schema.json",
+  "manifest_version": 1,
+  "schema": "struct_uint_keys.cddl",
+  "kind": "negative",
+  "cases": [
+    {
+      "id": "struct_uint_keys/json_key_not_decimal",
+      "root": "Header",
+      "description": "a member name that is not an integer",
+      "requirements": ["REQ-KEY-040", "REQ-RT-230"],
+      "derivation": "hand-encoded",
+      "input": {"json": "{\"a\":1,\"2\":\"\",\"9\":\"\"}"},
+      "classification": "schema_invalid",
+      "error": {"kind": "bad_key", "path": ""}
+    },
+    {
+      "id": "struct_uint_keys/json_key_out_of_range",
+      "root": "Header",
+      "description": "a member name above 2^64-1",
+      "requirements": ["REQ-KEY-040", "REQ-RT-230"],
+      "derivation": "hand-encoded",
+      "input": {"json": "{\"1\":0,\"2\":\"\",\"9\":\"\",\"18446744073709551616\":0}"},
+      "classification": "schema_invalid",
+      "error": {"kind": "bad_key", "path": ""}
+    },
+    {
+      "id": "struct_uint_keys/json_key_negative",
+      "root": "Header",
+      "description": "a negative member name for an unsigned key",
+      "requirements": ["REQ-KEY-040"],
+      "derivation": "hand-encoded",
+      "input": {"json": "{\"-1\":0,\"1\":0,\"2\":\"\",\"9\":\"\"}"},
+      "classification": "schema_invalid",
+      "error": {"kind": "bad_key", "path": ""}
+    },
+    {
+      "id": "struct_uint_keys/json_key_fraction",
+      "root": "Header",
+      "description": "a member name with a fraction",
+      "requirements": ["REQ-KEY-040"],
+      "derivation": "hand-encoded",
+      "input": {"json": "{\"1.0\":0,\"2\":\"\",\"9\":\"\"}"},
+      "classification": "schema_invalid",
+      "error": {"kind": "bad_key", "path": ""}
+    },
+    {
+      "id": "struct_uint_keys/json_field_type_mismatch",
+      "root": "Header",
+      "description": "key 1 (int) holds a string; the path is the decimal key",
+      "requirements": ["REQ-KEY-030", "REQ-RT-066", "REQ-RT-070"],
+      "derivation": "hand-encoded",
+      "input": {"json": "{\"1\":\"x\",\"2\":\"\",\"9\":\"\"}"},
+      "classification": "schema_invalid",
+      "error": {"kind": "type_mismatch", "path": "1"}
+    },
+    {
+      "id": "struct_uint_keys/json_missing_field",
+      "root": "Header",
+      "description": "key 2 absent",
+      "requirements": ["REQ-RT-066", "REQ-RT-070"],
+      "derivation": "hand-encoded",
+      "input": {"json": "{\"1\":0,\"9\":\"\"}"},
+      "classification": "schema_invalid",
+      "error": {"kind": "missing_field", "path": "2"}
+    }
+  ]
+}

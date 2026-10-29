@@ -762,12 +762,35 @@ def json_equivalent(input_text, canon_text, variance):
     return errs
 
 
+def _has_nonfinite(v):
+    for tag, payload in _walk_tags(v):
+        if tag in ("f16", "f32", "f64") and payload in ("NaN", "Infinity", "-Infinity"):
+            return True
+    return False
+
+
+def _walk_tags(v):
+    (tag, payload), = v.items()
+    yield tag, payload
+    if tag == "array":
+        for x in payload:
+            yield from _walk_tags(x)
+    if tag == "map":
+        for k, x in payload:
+            yield from _walk_tags(k)
+            yield from _walk_tags(x)
+
+
 def check_noncanonical(case):
     """DoD clause 2: the input is valid and acceptable, genuinely non-canonical
     in the declared way, and equivalent to the canonical vector."""
     errs = []
     variance, inp = case["variance"], case["input"]
-    errs += check_cbor(case) + check_json(case)  # the canonical triple is a 1.2-style vector
+    errs += check_cbor(case)
+    if "json" in case:  # the canonical triple is a 1.2-style vector
+        errs += check_json(case)
+    elif not _has_nonfinite(case["value"]):
+        errs.append("json may be omitted only when the value contains NaN or an infinity")
     if "cbor" in inp:
         if variance in JSON_VARIANCES:
             return errs + [f"variance {variance} needs a json input"]

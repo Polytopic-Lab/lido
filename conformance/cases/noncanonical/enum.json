@@ -1,0 +1,20 @@
+{
+  "$schema": "../../manifest.schema.json",
+  "manifest_version": 1,
+  "schema": "enum.cddl",
+  "kind": "noncanonical",
+  "cases": [
+    {
+      "id": "enum/color_red_chunked",
+      "root": "Color",
+      "description": "\"red\" as the chunked string (_ \"re\", \"d\")",
+      "requirements": ["REQ-RT-180", "REQ-RT-385"],
+      "derivation": "hand-encoded",
+      "variance": "indefinite_length",
+      "input": {"cbor": "7f6272656164ff"},
+      "value": {"tstr": "red"},
+      "cbor": "63726564",
+      "json": "\"red\""
+    }
+  ]
+}

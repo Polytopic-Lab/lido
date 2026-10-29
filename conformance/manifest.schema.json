@@ -273,7 +273,7 @@
     "noncanonicalCase": {
       "description": "An input a decoder must accept, with the canonical vector it is equivalent to.",
       "type": "object",
-      "required": ["id", "root", "description", "requirements", "derivation", "variance", "input", "value", "cbor", "json"],
+      "required": ["id", "root", "description", "requirements", "derivation", "variance", "input", "value", "cbor"],
       "properties": {
         "id": { "$ref": "#/$defs/positiveCase/properties/id" },
         "root": { "$ref": "#/$defs/positiveCase/properties/root" },

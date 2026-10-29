@@ -611,3 +611,54 @@ renaming the job or its modes means editing branch protection by hand.
 Each later slice that adds corpus content (1.3, 1.4) is held to the same
 gate. This entry does not supersede D-006; it extends part 4's list, as
 D-006 itself says that list does not update on its own.
+
+## D-010 — Negative, non-canonical and encode-error vectors: record shapes and what an error pins
+Date: 2026-10-28 · Closes: slice 1.3 plan §6 Q3, Q4, Q5; extends D-007 §2 · Phase: 1
+
+Decision: four parts.
+
+1. **Classification.** A `negative` case is `malformed` or `schema_invalid`
+   (the slice 1.3 DoD's two values). `malformed` means a strict generic
+   CBOR or JSON decoder rejects the input: not well-formed (RFC 8949 §1.2),
+   text that is not UTF-8, or a map with a duplicate key (REQ-RT-300/315).
+   `schema_invalid` means well-formed and valid generic data that is not an
+   instance of the root type. The word *malformed* is therefore wider than
+   RFC 8949's, which files UTF-8 and duplicate-key failures under "invalid".
+2. **A new kind, `encode_error`**, in `cases/encode_error/`, for encodes that
+   must fail. It is not `negative`, because the DoD calls every negative
+   vector malformed or schema-invalid and an encode failure is neither.
+   `kind` gains this value additively; `manifest_version` stays 1 because no
+   harness exists yet to be broken by an unknown kind (the first is Phase 2),
+   and the bump rule of D-007 exists to protect consumers.
+3. **What an expected error pins:** `classification` (decode), `error.kind`
+   from a closed enum, and for `schema_invalid` and encode errors
+   `error.path` in the REQ-RT-066 grammar. It does **not** pin message text
+   (language-idiomatic; REQ-RT-065 specifies content, not wording) or any byte
+   offset, line, or column (their meaning is undefined until slice 2.1
+   designs the error types).
+4. **`noncanonical` records** carry the canonical `value`/`cbor`/`json` of
+   what the input decodes to, plus a closed `variance` enum, so every
+   accepted input is tied to a canonical vector and its claimed departure is
+   checkable. `json` is omitted only for values with no JSON form.
+
+Alternatives: a third classification value `invalid` (rejected — keeps the
+DoD's two values and gives harness authors one question: did a strict generic
+decoder reject it?); encode errors as `negative` with a third classification
+(rejected — weakens the DoD); pinning offsets now (rejected — undefined);
+`limits` in the format for REQ-RT-270/280/290 (rejected here, owned by slice
+1.4's coverage decision — the configuration vocabulary belongs to the runtime
+API of slice 2.1, not to a corpus field guessed in advance).
+
+Rationale: the corpus can only say an implementation is wrong if each
+vector's expected outcome is checkable by something that is not that
+implementation (development.md §3.3); every choice above is the strictest
+contract that can be confirmed with `cbor2`, a strict JSON parser and the
+RFC-derived `cborcheck` alone.
+
+Consequences: `error.kind` and `variance` enums are effectively append-only,
+as case ids are. That a `schema_invalid` input is genuinely not an instance of
+its root is not machine-confirmed in Phase 1; the first Phase 3 slice with a
+validator should add "every positive case validates, every negative is
+rejected" under `crates/`, outside the zero-Lido-code gate. REQ-RT-270/280/290
+have no vector and must be exempted, with a reason, by slice 1.4's coverage
+manifest.
