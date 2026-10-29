@@ -1009,7 +1009,10 @@ def section9_requirements(specs_text):
 
 
 def plan_slices(plan_text):
-    return set(re.findall(r"^### ([0-9]+\.[0-9]+) — ", plan_text, re.M))
+    """Slice ids in plan.md: `### 2.1 — Title` headings (phases 0-5) and
+    `| 8.7 | Task |` table rows (phases 6-10, which are sliced at kickoff)."""
+    return (set(re.findall(r"^### ([0-9]+\.[0-9]+) — ", plan_text, re.M))
+            | set(re.findall(r"^\| ([0-9]+\.[0-9]+) \|", plan_text, re.M)))
 
 
 def derive_coverage(docs, req_ids, implied):
@@ -1647,7 +1650,7 @@ class Tests(unittest.TestCase):
 ## 10. Next
 - **REQ-CLI-010** not in scope
 """
-    PLAN = "### 2.1 — A\n### 9.4 — B\n"
+    PLAN = "### 2.1 — A\n| 9.4 | B | L |\n"
 
     def _cov_docs(self, tags):
         return {"a": {"kind": "positive", "cases": [{"id": "s/a", "requirements": tags}]}}
@@ -1703,6 +1706,7 @@ class Tests(unittest.TestCase):
         self.assertTrue(with_exempt(tested_in="slice 7.7"))        # no such heading in plan.md
         self.assertTrue(with_exempt(tested_in=None))               # only a non_guarantee may omit it
         self.assertTrue(with_exempt(tested_in="2.1"))
+        self.assertEqual(with_exempt(tested_in="slice 9.4"), [])      # a table-row slice (phases 6-10)
         # stale: a case now tests a requirement that is still marked exempt
         tagged = self._cov_docs(["REQ-RT-160", "REQ-RT-020"])
         cov = self._cov(docs)

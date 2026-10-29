@@ -1,0 +1,62 @@
+{
+  "$schema": "../../manifest.schema.json",
+  "manifest_version": 1,
+  "pair": "field_declared_first",
+  "kind": "evolution",
+  "cases": [
+    {
+      "id": "field_declared_first/new_writer_old_reader_cbor",
+      "root": "Account",
+      "description": "the new writer's output decoded by the old reader: nickname discarded",
+      "requirements": ["REQ-COMPAT-020", "REQ-COMPAT-025", "REQ-COMPAT-030", "REQ-KEY-050", "REQ-RT-165"],
+      "derivation": "cbor2",
+      "scenario": "declaration_order_independent",
+      "direction": "new_to_old",
+      "input": {"cbor": "a3626964096762616c616e63653877686e69636b6e616d6563616365"},
+      "ignored": ["nickname"],
+      "value": {"map": [[{"tstr": "id"}, {"uint": "9"}], [{"tstr": "balance"}, {"int": "-120"}]]},
+      "cbor": "a2626964096762616c616e63653877",
+      "json": "{\"id\":9,\"balance\":-120}"
+    },
+    {
+      "id": "field_declared_first/old_writer_new_reader_cbor",
+      "root": "Account",
+      "description": "the old writer's output decoded by the new reader",
+      "requirements": ["REQ-COMPAT-010", "REQ-COMPAT-030", "REQ-KEY-050", "REQ-RT-165"],
+      "derivation": "cbor2",
+      "scenario": "declaration_order_independent",
+      "direction": "old_to_new",
+      "input": {"cbor": "a2626964096762616c616e63653877"},
+      "value": {"map": [[{"tstr": "id"}, {"uint": "9"}], [{"tstr": "balance"}, {"int": "-120"}]]},
+      "cbor": "a2626964096762616c616e63653877",
+      "json": "{\"id\":9,\"balance\":-120}"
+    },
+    {
+      "id": "field_declared_first/new_writer_old_reader_json",
+      "root": "Account",
+      "description": "the new writer's output decoded by the old reader: nickname discarded",
+      "requirements": ["REQ-COMPAT-020", "REQ-COMPAT-025", "REQ-COMPAT-030", "REQ-KEY-050", "REQ-RT-165"],
+      "derivation": "cbor2",
+      "scenario": "declaration_order_independent",
+      "direction": "new_to_old",
+      "input": {"json": "{\"id\":9,\"balance\":-120,\"nickname\":\"ace\"}"},
+      "ignored": ["nickname"],
+      "value": {"map": [[{"tstr": "id"}, {"uint": "9"}], [{"tstr": "balance"}, {"int": "-120"}]]},
+      "cbor": "a2626964096762616c616e63653877",
+      "json": "{\"id\":9,\"balance\":-120}"
+    },
+    {
+      "id": "field_declared_first/old_writer_new_reader_json",
+      "root": "Account",
+      "description": "the old writer's output decoded by the new reader",
+      "requirements": ["REQ-COMPAT-010", "REQ-COMPAT-030", "REQ-KEY-050", "REQ-RT-165"],
+      "derivation": "cbor2",
+      "scenario": "declaration_order_independent",
+      "direction": "old_to_new",
+      "input": {"json": "{\"id\":9,\"balance\":-120}"},
+      "value": {"map": [[{"tstr": "id"}, {"uint": "9"}], [{"tstr": "balance"}, {"int": "-120"}]]},
+      "cbor": "a2626964096762616c616e63653877",
+      "json": "{\"id\":9,\"balance\":-120}"
+    }
+  ]
+}

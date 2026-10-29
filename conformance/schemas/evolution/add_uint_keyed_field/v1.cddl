@@ -1,0 +1,5 @@
+; Revision 1: COSE-style integer keys.
+Header = {
+  1: int,
+  2: bstr,
+}

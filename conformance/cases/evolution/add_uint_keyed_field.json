@@ -1,0 +1,62 @@
+{
+  "$schema": "../../manifest.schema.json",
+  "manifest_version": 1,
+  "pair": "add_uint_keyed_field",
+  "kind": "evolution",
+  "cases": [
+    {
+      "id": "add_uint_keyed_field/new_writer_old_reader_cbor",
+      "root": "Header",
+      "description": "the new writer's output decoded by the old reader: 3 discarded",
+      "requirements": ["REQ-COMPAT-020", "REQ-COMPAT-025", "REQ-COMPAT-035", "REQ-KEY-030"],
+      "derivation": "cbor2",
+      "scenario": "add_uint_keyed_field",
+      "direction": "new_to_old",
+      "input": {"cbor": "a301260242010203636b6964"},
+      "ignored": ["3"],
+      "value": {"map": [[{"uint": "1"}, {"int": "-7"}], [{"uint": "2"}, {"bstr": "0102"}]]},
+      "cbor": "a2012602420102",
+      "json": "{\"1\":-7,\"2\":\"AQI\"}"
+    },
+    {
+      "id": "add_uint_keyed_field/old_writer_new_reader_cbor",
+      "root": "Header",
+      "description": "the old writer's output decoded by the new reader",
+      "requirements": ["REQ-COMPAT-010", "REQ-COMPAT-035", "REQ-KEY-030"],
+      "derivation": "cbor2",
+      "scenario": "add_uint_keyed_field",
+      "direction": "old_to_new",
+      "input": {"cbor": "a2012602420102"},
+      "value": {"map": [[{"uint": "1"}, {"int": "-7"}], [{"uint": "2"}, {"bstr": "0102"}]]},
+      "cbor": "a2012602420102",
+      "json": "{\"1\":-7,\"2\":\"AQI\"}"
+    },
+    {
+      "id": "add_uint_keyed_field/new_writer_old_reader_json",
+      "root": "Header",
+      "description": "the new writer's output decoded by the old reader: 3 discarded",
+      "requirements": ["REQ-COMPAT-020", "REQ-COMPAT-025", "REQ-COMPAT-035", "REQ-KEY-030"],
+      "derivation": "cbor2",
+      "scenario": "add_uint_keyed_field",
+      "direction": "new_to_old",
+      "input": {"json": "{\"1\":-7,\"2\":\"AQI\",\"3\":\"kid\"}"},
+      "ignored": ["3"],
+      "value": {"map": [[{"uint": "1"}, {"int": "-7"}], [{"uint": "2"}, {"bstr": "0102"}]]},
+      "cbor": "a2012602420102",
+      "json": "{\"1\":-7,\"2\":\"AQI\"}"
+    },
+    {
+      "id": "add_uint_keyed_field/old_writer_new_reader_json",
+      "root": "Header",
+      "description": "the old writer's output decoded by the new reader",
+      "requirements": ["REQ-COMPAT-010", "REQ-COMPAT-035", "REQ-KEY-030"],
+      "derivation": "cbor2",
+      "scenario": "add_uint_keyed_field",
+      "direction": "old_to_new",
+      "input": {"json": "{\"1\":-7,\"2\":\"AQI\"}"},
+      "value": {"map": [[{"uint": "1"}, {"int": "-7"}], [{"uint": "2"}, {"bstr": "0102"}]]},
+      "cbor": "a2012602420102",
+      "json": "{\"1\":-7,\"2\":\"AQI\"}"
+    }
+  ]
+}

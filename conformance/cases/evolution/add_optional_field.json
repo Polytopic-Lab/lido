@@ -1,0 +1,62 @@
+{
+  "$schema": "../../manifest.schema.json",
+  "manifest_version": 1,
+  "pair": "add_optional_field",
+  "kind": "evolution",
+  "cases": [
+    {
+      "id": "add_optional_field/new_writer_old_reader_cbor",
+      "root": "Person",
+      "description": "the new writer's output decoded by the old reader: email discarded",
+      "requirements": ["REQ-COMPAT-020", "REQ-COMPAT-025", "REQ-RT-320"],
+      "derivation": "cbor2",
+      "scenario": "add_optional_field",
+      "direction": "new_to_old",
+      "input": {"cbor": "a3636167651824646e616d656341646165656d61696c656140622e63"},
+      "ignored": ["email"],
+      "value": {"map": [[{"tstr": "age"}, {"uint": "36"}], [{"tstr": "name"}, {"tstr": "Ada"}]]},
+      "cbor": "a2636167651824646e616d6563416461",
+      "json": "{\"age\":36,\"name\":\"Ada\"}"
+    },
+    {
+      "id": "add_optional_field/old_writer_new_reader_cbor",
+      "root": "Person",
+      "description": "the old writer's output decoded by the new reader",
+      "requirements": ["REQ-COMPAT-010", "REQ-RT-320"],
+      "derivation": "cbor2",
+      "scenario": "add_optional_field",
+      "direction": "old_to_new",
+      "input": {"cbor": "a2636167651824646e616d6563416461"},
+      "value": {"map": [[{"tstr": "age"}, {"uint": "36"}], [{"tstr": "name"}, {"tstr": "Ada"}]]},
+      "cbor": "a2636167651824646e616d6563416461",
+      "json": "{\"age\":36,\"name\":\"Ada\"}"
+    },
+    {
+      "id": "add_optional_field/new_writer_old_reader_json",
+      "root": "Person",
+      "description": "the new writer's output decoded by the old reader: email discarded",
+      "requirements": ["REQ-COMPAT-020", "REQ-COMPAT-025", "REQ-RT-320"],
+      "derivation": "cbor2",
+      "scenario": "add_optional_field",
+      "direction": "new_to_old",
+      "input": {"json": "{\"age\":36,\"name\":\"Ada\",\"email\":\"a@b.c\"}"},
+      "ignored": ["email"],
+      "value": {"map": [[{"tstr": "age"}, {"uint": "36"}], [{"tstr": "name"}, {"tstr": "Ada"}]]},
+      "cbor": "a2636167651824646e616d6563416461",
+      "json": "{\"age\":36,\"name\":\"Ada\"}"
+    },
+    {
+      "id": "add_optional_field/old_writer_new_reader_json",
+      "root": "Person",
+      "description": "the old writer's output decoded by the new reader",
+      "requirements": ["REQ-COMPAT-010", "REQ-RT-320"],
+      "derivation": "cbor2",
+      "scenario": "add_optional_field",
+      "direction": "old_to_new",
+      "input": {"json": "{\"age\":36,\"name\":\"Ada\"}"},
+      "value": {"map": [[{"tstr": "age"}, {"uint": "36"}], [{"tstr": "name"}, {"tstr": "Ada"}]]},
+      "cbor": "a2636167651824646e616d6563416461",
+      "json": "{\"age\":36,\"name\":\"Ada\"}"
+    }
+  ]
+}

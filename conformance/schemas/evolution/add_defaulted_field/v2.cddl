@@ -1,0 +1,5 @@
+; Revision 2 adds a defaulted field (REQ-COMPAT-010, REQ-RT-080).
+Settings = {
+  name: tstr,
+  ? retries: uint .default 3,
+}

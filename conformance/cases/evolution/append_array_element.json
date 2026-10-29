@@ -1,0 +1,62 @@
+{
+  "$schema": "../../manifest.schema.json",
+  "manifest_version": 1,
+  "pair": "append_array_element",
+  "kind": "evolution",
+  "cases": [
+    {
+      "id": "append_array_element/new_writer_old_reader_cbor",
+      "root": "Triple",
+      "description": "the new writer's output decoded by the old reader: [2] discarded",
+      "requirements": ["REQ-COMPAT-020", "REQ-COMPAT-025", "REQ-COMPAT-060"],
+      "derivation": "cbor2",
+      "scenario": "append_array_element",
+      "direction": "new_to_old",
+      "input": {"cbor": "83016178f5"},
+      "ignored": ["[2]"],
+      "value": {"array": [{"uint": "1"}, {"tstr": "x"}]},
+      "cbor": "82016178",
+      "json": "[1,\"x\"]"
+    },
+    {
+      "id": "append_array_element/old_writer_new_reader_cbor",
+      "root": "Triple",
+      "description": "the old writer's output decoded by the new reader",
+      "requirements": ["REQ-COMPAT-010", "REQ-COMPAT-060"],
+      "derivation": "cbor2",
+      "scenario": "append_array_element",
+      "direction": "old_to_new",
+      "input": {"cbor": "82016178"},
+      "value": {"array": [{"uint": "1"}, {"tstr": "x"}]},
+      "cbor": "82016178",
+      "json": "[1,\"x\"]"
+    },
+    {
+      "id": "append_array_element/new_writer_old_reader_json",
+      "root": "Triple",
+      "description": "the new writer's output decoded by the old reader: [2] discarded",
+      "requirements": ["REQ-COMPAT-020", "REQ-COMPAT-025", "REQ-COMPAT-060"],
+      "derivation": "cbor2",
+      "scenario": "append_array_element",
+      "direction": "new_to_old",
+      "input": {"json": "[1,\"x\",true]"},
+      "ignored": ["[2]"],
+      "value": {"array": [{"uint": "1"}, {"tstr": "x"}]},
+      "cbor": "82016178",
+      "json": "[1,\"x\"]"
+    },
+    {
+      "id": "append_array_element/old_writer_new_reader_json",
+      "root": "Triple",
+      "description": "the old writer's output decoded by the new reader",
+      "requirements": ["REQ-COMPAT-010", "REQ-COMPAT-060"],
+      "derivation": "cbor2",
+      "scenario": "append_array_element",
+      "direction": "old_to_new",
+      "input": {"json": "[1,\"x\"]"},
+      "value": {"array": [{"uint": "1"}, {"tstr": "x"}]},
+      "cbor": "82016178",
+      "json": "[1,\"x\"]"
+    }
+  ]
+}
