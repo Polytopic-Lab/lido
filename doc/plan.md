@@ -167,13 +167,23 @@ to cases, and make its completeness a CI check.
 
 **Requirements.** REQ-COMPAT-010/020/060; specs.md §9.1–§9.8.
 
-**DoD.** Every requirement in specs.md §9.1–§9.8 maps to at least one
-corpus case in the coverage manifest, and CI fails if a requirement has
-no case. Every §9.6 compatibility scenario has an old/new schema pair.
+**DoD.** Every requirement in specs.md §9 (the introduction and §9.1–§9.8)
+maps to at least one corpus case in the coverage manifest, or carries a
+recorded exemption naming its category, a reason, and the slice that
+tests it; and CI fails if a requirement has neither. Every §9.6
+compatibility scenario has an old/new schema pair.
+
+*Why exemptions:* some §9 requirements cannot be tested by a byte-exact
+vector (API shape, the `no_std` and `-fno-exceptions` build constraints,
+optional behaviour, configurable limits, and the explicit non-guarantees of
+REQ-COMPAT-040/050). Counting them as "covered" by an unrelated case would
+be dishonest, and leaving the DoD unsatisfiable would make the CI check
+meaningless; a checked exemption states who does test them.
 
 **Phase DoD:** The corpus self-check passes in CI with zero Lido code,
-and the coverage manifest shows full requirement coverage across
-§9.1–§9.8.
+and the coverage manifest accounts for every requirement in specs.md §9 —
+by a corpus case or by a recorded exemption — with no requirement
+unaccounted for.
 
 ---
 
