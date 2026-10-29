@@ -13,6 +13,7 @@ writes it. No Lido code is involved anywhere in this file (REQ-ARCH-060).
 """
 import argparse
 import base64
+import io
 import json
 import math
 import re
@@ -187,7 +188,12 @@ def _fits(fmt, x):
         return False
 
 
-def value_matches(v, obj, path="value"):
+def _py_key(kv):
+    (tag, payload), = kv.items()
+    return int(payload) if tag == "uint" else payload
+
+
+def value_matches(v, obj, path="value", ordered=True):
     """Return a list of mismatches between value-model `v` and the Python
     object `obj` that cbor2 decoded. Type-strict; map pairs compared in order."""
     (tag, payload), = v.items()
@@ -217,14 +223,23 @@ def value_matches(v, obj, path="value"):
     if tag == "array":
         if type(obj) is not list or len(obj) != len(payload):
             return [f"{path}: expected array of {len(payload)}, decoded {obj!r}"]
-        return [e for i, (pv, po) in enumerate(zip(payload, obj)) for e in value_matches(pv, po, f"{path}[{i}]")]
+        return [e for i, (pv, po) in enumerate(zip(payload, obj))
+                for e in value_matches(pv, po, f"{path}[{i}]", ordered)]
     if tag == "map":
         if type(obj) is not dict or len(obj) != len(payload):
             return [f"{path}: expected map of {len(payload)} entries, decoded {obj!r}"]
         errs = []
+        if not ordered:  # pairs match by key; the order is the variance under test
+            for i, (kv, vv) in enumerate(payload):
+                want = _py_key(kv)
+                if want not in obj:
+                    errs.append(f"{path}: key {want!r} missing from decoded map")
+                else:
+                    errs += value_matches(vv, obj[want], f"{path}.val[{i}]", ordered)
+            return errs
         for i, ((kv, vv), (ko, vo)) in enumerate(zip(payload, obj.items())):
             errs += value_matches(kv, ko, f"{path}.key[{i}]")
-            errs += value_matches(vv, vo, f"{path}.val[{i}]")
+            errs += value_matches(vv, vo, f"{path}.val[{i}]", ordered)
         return errs
     return [f"{path}: unknown tag {tag!r}"]
 
@@ -388,7 +403,7 @@ def check_unique_ids(docs):
 
 
 def check_schemas_have_cases(schema_files, docs):
-    have = {d["schema"] for d in docs.values() if d["kind"] == "positive"}
+    have = {d["schema"] for d in docs.values() if d["kind"] == "positive"}  # every schema needs positives
     return [f"{s}: no positive case file" for s in sorted(set(schema_files) - have)]
 
 
@@ -422,6 +437,8 @@ def mutation_test(docs, use_cborcheck=True):
     """Return (survivors, total). A survivor is a mutation nothing detected."""
     survivors, total = [], 0
     for rel, doc in docs.items():
+        if doc["kind"] != "positive":
+            continue
         for case in doc["cases"]:
             assert case_detects(dict(case), use_cborcheck) is False, f"{case['id']} must pass unmutated"
             for desc, m in mutations(case):
@@ -429,6 +446,400 @@ def mutation_test(docs, use_cborcheck=True):
                 if not case_detects(m, use_cborcheck):
                     survivors.append(f"{case['id']} {desc}")
     return survivors, total
+
+
+# --- negative, noncanonical and encode_error records (slice 1.3) -------------
+
+CBOR_KIND_OF = {"truncated": "truncated", "trailing": "trailing_data"}
+VARIANCE_CATEGORY = {
+    "indefinite_length": "indefinite", "unsorted_keys": "key_order", "non_shortest_head": "head",
+    "wider_float": "float", "non_canonical_nan": "nan",
+}
+JSON_VARIANCES = {"whitespace", "string_escapes", "number_spelling", "int_as_string",
+                  "int_as_number", "base64_padding", "member_order"}
+
+_NAME = re.compile(r"[A-Za-z_][A-Za-z0-9_]*|[0-9]+")
+_INDEX = re.compile(r"\[([0-9]+)\]")
+_TKEY = re.compile(r'\[("(?:[^"\\]|\\.)*")\]')
+
+
+def parse_path(path):
+    """REQ-RT-066: the segments of an error path, or ValueError. A field segment
+    follows `.` except at the start; `[...]` segments attach with no dot."""
+    segs, i = [], 0
+    while i < len(path):
+        if path[i] == "[":
+            m = _INDEX.match(path, i)
+            if m:
+                segs.append(("idx", int(m.group(1))))
+            else:
+                m = _TKEY.match(path, i)
+                if not m:
+                    raise ValueError(f"bad path {path!r} at {i}")
+                segs.append(("tkey", json.loads(m.group(1))))
+        else:
+            if i > 0:
+                if path[i] != ".":
+                    raise ValueError(f"bad path {path!r} at {i}")
+                i += 1
+            m = _NAME.match(path, i)
+            if not m:
+                raise ValueError(f"bad path {path!r} at {i}")
+            segs.append(("key", m.group(0)))
+        i = m.end()
+    return segs
+
+
+def walk_decoded(obj, segs):
+    """Follow `segs` through a decoded (cbor2 or json) object; return
+    (found, value). Table keys that look numeric are tried as integers too."""
+    for kind, seg in segs:
+        if kind == "idx" and isinstance(obj, dict):  # [7]: a uint-keyed table entry
+            if seg not in obj:
+                return False, None
+            obj = obj[seg]
+        elif kind == "idx":
+            if type(obj) is not list or seg >= len(obj):
+                return False, None
+            obj = obj[seg]
+        else:
+            if not isinstance(obj, dict):
+                return False, None
+            for cand in (seg, int(seg) if isinstance(seg, str) and seg.isdigit() else None):
+                if cand is not None and cand in obj:
+                    obj = obj[cand]
+                    break
+            else:
+                return False, None
+    return True, obj
+
+
+def walk_value(v, segs):
+    """Follow `segs` through a value-model value; return (found, value)."""
+    for kind, seg in segs:
+        (tag, payload), = v.items()
+        if kind == "idx" and tag == "map":  # [7]: a uint-keyed table entry
+            hit = [val for k, val in payload if str(_py_key(k)) == str(seg)]
+            if not hit:
+                return False, None
+            v = hit[0]
+        elif kind == "idx":
+            if tag != "array" or seg >= len(payload):
+                return False, None
+            v = payload[seg]
+        else:
+            if tag != "map":
+                return False, None
+            hit = [val for k, val in payload if str(_py_key(k)) == str(seg)]
+            if not hit:
+                return False, None
+            v = hit[0]
+    return True, v
+
+
+def cbor2_strict(data):
+    """cbor2 decode of exactly one item; raises on anything cbor2 rejects,
+    including trailing bytes (which cbor2.loads alone ignores)."""
+    fp = io.BytesIO(data)
+    obj = cbor2.CBORDecoder(fp).decode()
+    if fp.read(1):
+        raise ValueError("trailing bytes")
+    return obj
+
+
+class _Num(str):
+    """A JSON number kept as its source spelling."""
+
+
+def json_strict(text, hook=None):
+    """Parse JSON text strictly. Returns the object, or raises ValueError whose
+    first argument is the error kind: truncated, trailing_data, syntax, duplicate_key."""
+    def reject(c):
+        raise ValueError("syntax", f"{c} is not JSON")
+
+    def pairs(ps):
+        names = [k for k, _ in ps]
+        if len(names) != len(set(names)):
+            raise ValueError("duplicate_key", "duplicate member name")
+        return hook(ps) if hook else dict(ps)
+
+    try:
+        return json.loads(text, parse_constant=reject, parse_float=_Num, parse_int=_Num,
+                          object_pairs_hook=pairs)
+    except json.JSONDecodeError as e:
+        stripped = len(text.rstrip())
+        if e.msg.startswith("Extra data"):
+            raise ValueError("trailing_data", e.msg)
+        if e.msg.startswith("Unterminated") or e.pos >= stripped:
+            raise ValueError("truncated", e.msg)
+        raise ValueError("syntax", e.msg)
+
+
+def cbor_kinds(a):
+    """The negative-vector error kinds an `Analysis` supports."""
+    kinds = set()
+    for m in a.malformed:
+        kinds.add("truncated" if "truncated" in m else "trailing_data" if "trailing" in m else "syntax")
+    for m in a.invalid:
+        kinds.add("invalid_utf8" if "UTF-8" in m else "duplicate_key")
+    return kinds
+
+
+def check_negative(case, schema_text):
+    """Slice 1.3 plan §4: confirm `classification` (and the declared kind) against
+    two independent parsers; confirm the path resolves in the input."""
+    errs = []
+    cls, err = case["classification"], case["error"]
+    kind = err["kind"]
+    inp = case["input"]
+    if "cbor" in inp:
+        data = bytes.fromhex(inp["cbor"])
+        a = cborcheck.analyze(data)
+        kinds = cbor_kinds(a)
+        derived = "malformed" if kinds else "schema_invalid"
+        try:
+            decoded, c2err = cbor2_strict(data), None
+        except Exception as e:  # any decoder refusal
+            decoded, c2err = None, e
+        if cls != derived:
+            errs.append(f"classification is {cls} but cborcheck finds {derived} ({sorted(kinds)})")
+        if cls == "malformed":
+            if kind not in kinds:
+                errs.append(f"error.kind {kind} not among cborcheck findings {sorted(kinds)}")
+            if kind != "duplicate_key" and c2err is None:
+                errs.append(f"cbor2 accepts the input but kind is {kind}")
+            if kind == "duplicate_key" and c2err is not None:
+                errs.append(f"duplicate_key input must be otherwise decodable by cbor2: {c2err}")
+        else:
+            if c2err is not None:
+                errs.append(f"schema_invalid input must be decodable: cbor2 says {c2err}")
+    else:
+        try:
+            decoded = json_strict(inp["json"])
+            derived, jkind = "schema_invalid", None
+        except ValueError as e:
+            decoded, derived, jkind = None, "malformed", e.args[0]
+        if cls != derived:
+            errs.append(f"classification is {cls} but a strict JSON parser finds {derived}")
+        if cls == "malformed" and kind != jkind:
+            errs.append(f"error.kind is {kind} but the JSON parser reports {jkind}")
+    if cls == "schema_invalid" and not errs:
+        errs += _check_error_target(case, decoded, schema_text)
+    return errs
+
+
+def _plain(obj):
+    """_Num -> int/float for numeric comparison."""
+    if isinstance(obj, _Num):
+        return Decimal(obj)
+    if isinstance(obj, dict):
+        return {k: _plain(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_plain(v) for v in obj]
+    return obj
+
+
+def _check_error_target(case, decoded, schema_text):
+    err, kind = case["error"], case["error"]["kind"]
+    try:
+        segs = parse_path(err["path"])
+    except ValueError as e:
+        return [str(e)]
+    found, obj = walk_decoded(_plain(decoded), segs)
+    if kind == "missing_field":
+        if not segs or segs[-1][0] != "key":
+            return ["missing_field path must end in a field name"]
+        found_parent, parent = walk_decoded(_plain(decoded), segs[:-1])
+        if not found_parent or not isinstance(parent, dict):
+            return [f"missing_field: parent of {err['path']!r} is not a map in the input"]
+        if walk_decoded(parent, segs[-1:])[0]:
+            return [f"missing_field: {err['path']!r} is present in the input"]
+        return []
+    if not found:
+        return [f"path {err['path']!r} does not resolve in the input"]
+    if kind == "out_of_range":
+        return _check_range(err.get("constraint"), obj, schema_text)
+    if kind == "unknown_discriminant" and "discriminant" not in err:
+        return ["unknown_discriminant must name the offending discriminant (REQ-RT-380)"]
+    return []
+
+
+def _check_range(constraint, num, schema_text):
+    if not constraint:
+        return ["out_of_range needs error.constraint"]
+    m = re.fullmatch(r"(-?[0-9.]+)\.\.(-?[0-9.]+)", constraint)
+    if not m:
+        return [f"constraint {constraint!r} is not lo..hi"]
+    if constraint not in schema_text:
+        return [f"constraint {constraint!r} does not occur in the schema"]
+    if isinstance(num, bool) or not isinstance(num, (int, float, Decimal)):
+        return [f"out_of_range target is not a number: {num!r}"]
+    lo, hi = Decimal(m.group(1)), Decimal(m.group(2))
+    if lo <= Decimal(num) <= hi:
+        return [f"value {num} lies inside {constraint}"]
+    return []
+
+
+def _subset(a, b, errs, path="$"):
+    """a's entries all occur in b with equal values (absent_default)."""
+    if isinstance(b, dict) and isinstance(a, dict):
+        for k, v in a.items():
+            if k not in b:
+                errs.append(f"{path}.{k} is not in the canonical value")
+            else:
+                _subset(v, b[k], errs, f"{path}.{k}")
+    elif _plain(a) != _plain(b):
+        errs.append(f"{path}: {a!r} != {b!r}")
+
+
+def json_equivalent(input_text, canon_text, variance):
+    """Parse both texts and compare them, allowing exactly the relaxation
+    `variance` names. Returns a list of problems (empty = equivalent)."""
+    errs, used = [], []
+    try:
+        a = json_strict(input_text, hook=lambda ps: ps)
+        b = json_strict(canon_text, hook=lambda ps: ps)
+    except ValueError as e:
+        return [f"not parseable: {e}"]
+
+    def walk(x, y, path):
+        if isinstance(y, list) and y and isinstance(y[0], tuple):  # object (pairs)
+            if not (isinstance(x, list) and (not x or isinstance(x[0], tuple))):
+                return errs.append(f"{path}: expected an object")
+            xd, yd = dict(x), dict(y)
+            if variance == "absent_default":
+                for k in xd:
+                    if k not in yd:
+                        errs.append(f"{path}.{k} not in canonical")
+                if len(xd) < len(yd):
+                    used.append(path)
+            elif set(xd) != set(yd):
+                return errs.append(f"{path}: member names differ")
+            for k in xd:
+                if k in yd:
+                    walk(xd[k], yd[k], f"{path}.{k}")
+            if variance == "member_order" and [k for k, _ in x] != [k for k, _ in y]:
+                used.append(path)
+        elif isinstance(y, list):
+            if not isinstance(x, list) or len(x) != len(y):
+                return errs.append(f"{path}: arrays differ in shape")
+            for i, (p, q) in enumerate(zip(x, y)):
+                walk(p, q, f"{path}[{i}]")
+        elif isinstance(y, _Num):
+            if isinstance(x, _Num):
+                if x == y:
+                    return
+                if variance in ("number_spelling", "int_as_number") and Decimal(x) == Decimal(y):
+                    used.append(path)
+                else:
+                    errs.append(f"{path}: number spelled {x} where {y} is canonical")
+            elif isinstance(x, str) and variance == "int_as_string" and re.fullmatch(r"-?[0-9]+", x) \
+                    and Decimal(x) == Decimal(y):
+                used.append(path)
+            else:
+                errs.append(f"{path}: {x!r} is not a permitted spelling of {y}")
+        elif isinstance(y, str):
+            if isinstance(x, _Num) and variance == "int_as_number" and re.fullmatch(r"-?[0-9]+", y) \
+                    and Decimal(x) == Decimal(y):
+                used.append(path)
+            elif isinstance(x, str) and not isinstance(x, _Num):
+                if x == y:
+                    return
+                if variance == "base64_padding" and x.rstrip("=") == y and "=" not in y:
+                    used.append(path)
+                else:
+                    errs.append(f"{path}: {x!r} != {y!r}")
+            else:
+                errs.append(f"{path}: {x!r} != {y!r}")
+        elif x != y or type(x) is not type(y):
+            errs.append(f"{path}: {x!r} != {y!r}")
+
+    walk(a, b, "$")
+    if input_text == canon_text:
+        errs.append("input is identical to the canonical json")
+    elif not used and variance not in ("whitespace", "string_escapes"):
+        errs.append(f"input does not exhibit variance {variance}")
+    return errs
+
+
+def check_noncanonical(case):
+    """DoD clause 2: the input is valid and acceptable, genuinely non-canonical
+    in the declared way, and equivalent to the canonical vector."""
+    errs = []
+    variance, inp = case["variance"], case["input"]
+    errs += check_cbor(case) + check_json(case)  # the canonical triple is a 1.2-style vector
+    if "cbor" in inp:
+        if variance in JSON_VARIANCES:
+            return errs + [f"variance {variance} needs a json input"]
+        data = bytes.fromhex(inp["cbor"])
+        a = cborcheck.analyze(data)
+        if a.malformed or a.invalid:
+            errs.append(f"input is not valid CBOR: {a.malformed + a.invalid}")
+        if a.outside_subset:
+            errs.append(f"input uses constructs outside the §3 subset: {a.outside_subset}")
+        try:
+            obj = cbor2_strict(data)
+        except Exception as e:
+            return errs + [f"cbor2 rejects the input: {e}"]
+        if data.hex() == case["cbor"]:
+            errs.append("input equals the canonical cbor")
+        if variance == "absent_default":
+            _subset(obj, cbor2.loads(bytes.fromhex(case["cbor"])), errs)
+            if len(obj) >= len(cbor2.loads(bytes.fromhex(case["cbor"]))):
+                errs.append("absent_default input omits nothing")
+        else:
+            want = VARIANCE_CATEGORY.get(variance)
+            if want is None:
+                errs.append(f"variance {variance} does not apply to cbor")
+            elif want not in {c for c, _ in a.nondeterministic}:
+                errs.append(f"input shows no {want} departure from RFC 8949 §4.2")
+            errs += value_matches(case["value"], obj, ordered=False)
+    else:
+        if variance in VARIANCE_CATEGORY:
+            return errs + [f"variance {variance} needs a cbor input"]
+        errs += json_equivalent(inp["json"], case["json"], variance)
+    return errs
+
+
+def check_encode_error(case, schema_text):
+    """An encode that must fail: confirm each expected failure is real, and each
+    expected success against the 1.2 machinery."""
+    errs = []
+    expect = case["expect"]
+    for enc in ("cbor", "json"):
+        e = expect[enc]
+        if isinstance(e, dict):
+            errs += _encode_failure_is_real(case, enc, e["error"], schema_text)
+        elif enc == "cbor":
+            errs += check_cbor(dict(case, cbor=e))
+        else:
+            errs += check_json(dict(case, json=e))
+    return errs
+
+
+def _encode_failure_is_real(case, enc, error, schema_text):
+    try:
+        segs = parse_path(error["path"])
+    except ValueError as e:
+        return [str(e)]
+    found, leaf = walk_value(case["value"], segs)
+    if not found:
+        return [f"{enc}: path {error['path']!r} does not resolve in value"]
+    (tag, payload), = leaf.items()
+    if error["kind"] == "out_of_range":
+        if tag not in ("uint", "int", "f16", "f32", "f64"):
+            return [f"{enc}: out_of_range target is a {tag}"]
+        return _check_range(error.get("constraint"), Decimal(payload) if tag in ("uint", "int") else Decimal(str(_float_of(payload))), schema_text)
+    if tag not in ("f16", "f32", "f64"):
+        return [f"{enc}: not_representable target is a {tag}"]
+    x = _float_of(payload)
+    nonfinite = x != x or x in (math.inf, -math.inf)
+    half_bad = tag == "f16" and not nonfinite and not _fits("e", x)
+    if enc == "json" and (nonfinite or half_bad):
+        return []
+    if enc == "cbor" and half_bad:
+        return []
+    return [f"{enc}: {payload} in a {tag} field encodes fine, so no error is expected"]
 
 
 # --- driver ---------------------------------------------------------------
@@ -459,8 +870,17 @@ def run(root, specs, check_format):
     errs += check_unique_ids(docs)
     for rel, doc in docs.items():
         errs += check_case_file(rel, doc, schema_texts, req_ids)
+        stext = schema_texts.get(doc["schema"], "")
         for case in doc["cases"]:
-            errs += [f"{case['id']}: {e}" for e in check_cbor(case) + check_json(case)]
+            if doc["kind"] == "positive":
+                found = check_cbor(case) + check_json(case)
+            elif doc["kind"] == "negative":
+                found = check_negative(case, stext)
+            elif doc["kind"] == "noncanonical":
+                found = check_noncanonical(case)
+            else:
+                found = check_encode_error(case, stext)
+            errs += [f"{case['id']}: {e}" for e in found]
     if check_format:
         for rel in ["manifest.schema.json", "index.json", "construct-coverage.json", *case_files]:
             errs += check_format_text((root / rel).read_text(encoding="utf-8"), rel)
@@ -741,6 +1161,145 @@ class Tests(unittest.TestCase):
         ]
         for d in bad:
             self.assertTrue(check_case_instance(self.schema, d, "x"), d)
+
+    def test_parse_path_grammar(self):
+        """REQ-RT-066: the path grammar."""
+        self.assertEqual(parse_path(""), [])
+        self.assertEqual(parse_path("[1]"), [("idx", 1)])
+        self.assertEqual(parse_path("items[2].price"), [("key", "items"), ("idx", 2), ("key", "price")])
+        self.assertEqual(parse_path('stock[7].qty'), [("key", "stock"), ("idx", 7), ("key", "qty")])
+        self.assertEqual(parse_path('scores["a\\"b"]'), [("key", "scores"), ("tkey", 'a"b')])
+        self.assertEqual(parse_path("9.x"), [("key", "9"), ("key", "x")])
+        for bad in [".a", "a..b", "a[", "a[x]", "a b", "[1]x"]:
+            with self.assertRaises(ValueError, msg=bad):
+                parse_path(bad)
+
+    def test_negative_classification_cbor(self):
+        """REQ-RT-300/310/315, REQ-RT-060: two parsers agree on the class."""
+        def neg(cbor, cls, kind, path=None):
+            err = {"kind": kind}
+            if path is not None:
+                err["path"] = path
+            return {"input": {"cbor": cbor}, "classification": cls, "error": err}
+        ok = [
+            neg("a2616101", "malformed", "truncated"),                       # map of 2, one pair
+            neg("a0 00".replace(" ", ""), "malformed", "trailing_data"),
+            neg("1c", "malformed", "syntax"),
+            neg("62c328", "malformed", "invalid_utf8"),
+            neg("a2616101616102", "malformed", "duplicate_key"),
+            neg("a1616101", "schema_invalid", "type_mismatch", ""),         # a map where a Person-like root is wanted
+            neg("c11a514b67b0", "schema_invalid", "type_mismatch", ""),     # tag: well-formed
+        ]
+        for c in ok:
+            self.assertEqual(check_negative(c, ""), [], c)
+        wrong = [
+            neg("a2616101", "schema_invalid", "type_mismatch", ""),         # actually truncated
+            neg("a1616101", "malformed", "truncated"),                       # actually fine
+            neg("62c328", "malformed", "truncated"),                         # wrong kind
+            neg("a2616101616102", "schema_invalid", "type_mismatch", ""),    # duplicate keys are malformed (D-010)
+            neg("a1616101", "schema_invalid", "type_mismatch", "nope"),      # path does not resolve
+        ]
+        for c in wrong:
+            self.assertTrue(check_negative(c, ""), c)
+
+    def test_negative_classification_json(self):
+        """REQ-RT-300/310, REQ-RT-070: strict JSON parsing decides the class."""
+        def neg(text, cls, kind, path=None):
+            err = {"kind": kind}
+            if path is not None:
+                err["path"] = path
+            return {"input": {"json": text}, "classification": cls, "error": err}
+        for c in [neg('{"a":1', "malformed", "truncated"), neg("", "malformed", "truncated"),
+                  neg('{"a":1}x', "malformed", "trailing_data"), neg("{'a':1}", "malformed", "syntax"),
+                  neg('{"a":1,}', "malformed", "syntax"), neg("NaN", "malformed", "syntax"),
+                  neg('{"a":1,"a":2}', "malformed", "duplicate_key"),
+                  neg('{"a":"x"}', "schema_invalid", "type_mismatch", "a")]:
+            self.assertEqual(check_negative(c, ""), [], c)
+        for c in [neg('{"a":1', "schema_invalid", "type_mismatch", ""),
+                  neg('{"a":"x"}', "malformed", "syntax"),
+                  neg('{"a":1,"a":2}', "malformed", "syntax")]:
+            self.assertTrue(check_negative(c, ""), c)
+
+    def test_negative_missing_field_and_range_targets(self):
+        """REQ-RT-060/240: paths must resolve; out_of_range needs a real range and a real excess."""
+        mf = {"input": {"json": '{"b":1}'}, "classification": "schema_invalid",
+              "error": {"kind": "missing_field", "path": "a"}}
+        self.assertEqual(check_negative(mf, ""), [])
+        mf["error"]["path"] = "b"
+        self.assertTrue(check_negative(mf, ""))
+        oor = {"input": {"json": '{"level":256}'}, "classification": "schema_invalid",
+               "error": {"kind": "out_of_range", "path": "level", "constraint": "0..255"}}
+        self.assertEqual(check_negative(oor, "Byte = 0..255"), [])
+        self.assertTrue(check_negative(oor, "Byte = 0..256"))               # constraint not in schema
+        oor["input"]["json"] = '{"level":255}'
+        self.assertTrue(check_negative(oor, "Byte = 0..255"))               # in range after all
+
+    def test_negative_flip_is_detected_for_every_real_negative(self):
+        """DoD clause 1: swapping malformed and schema_invalid fails the check."""
+        root = CONFORMANCE
+        for p in sorted((root / "cases" / "negative").glob("*.json")) if (root / "cases" / "negative").exists() else []:
+            doc = load(p)
+            stext = (root / "schemas" / doc["schema"]).read_text(encoding="utf-8")
+            for case in doc["cases"]:
+                flipped = dict(case, classification="malformed" if case["classification"] == "schema_invalid" else "schema_invalid")
+                self.assertTrue(check_negative(flipped, stext), case["id"])
+
+    def test_noncanonical_cbor(self):
+        """REQ-RT-180: the input is valid, really departs in the declared way, and decodes to value."""
+        def nc(cbor, variance, canon="83010203", value=None):
+            value = value or {"array": [{"uint": "1"}, {"uint": "2"}, {"uint": "3"}]}
+            return {"variance": variance, "input": {"cbor": cbor}, "value": value, "cbor": canon,
+                    "json": "[1,2,3]"}
+        self.assertEqual(check_noncanonical(nc("9f010203ff", "indefinite_length")), [])
+        self.assertEqual(check_noncanonical(nc("83 01 1802 03".replace(" ", ""), "non_shortest_head")), [])
+        self.assertTrue(check_noncanonical(nc("83010203", "indefinite_length")))        # actually canonical
+        self.assertTrue(check_noncanonical(nc("9f010203ff", "non_shortest_head")))      # wrong variance
+        self.assertTrue(check_noncanonical(nc("9f010203", "indefinite_length")))        # unterminated
+        self.assertTrue(check_noncanonical(nc("9f010204ff", "indefinite_length")))      # decodes to another value
+        self.assertTrue(check_noncanonical(nc("9f010203ff", "whitespace")))             # json variance, cbor input
+        m = {"map": [[{"tstr": "a"}, {"uint": "1"}], [{"tstr": "b"}, {"uint": "2"}]]}
+        self.assertEqual(check_noncanonical({"variance": "unsorted_keys", "input": {"cbor": "a2616202616101"},
+                                             "value": m, "cbor": "a2616101616202", "json": '{"a":1,"b":2}'}), [])
+
+    def test_json_equivalent(self):
+        """REQ-RT-175/178/179/200/220/176: only the named relaxation is allowed."""
+        c = '{"a":1,"b":"x"}'
+        self.assertEqual(json_equivalent(' { "a" : 1 , "b" : "x" } ', c, "whitespace"), [])
+        self.assertEqual(json_equivalent('{"a":1,"b":"\\u0078"}', c, "string_escapes"), [])
+        self.assertEqual(json_equivalent('{"a":1.0,"b":"x"}', c, "number_spelling"), [])
+        self.assertEqual(json_equivalent('{"a":"1","b":"x"}', c, "int_as_string"), [])
+        self.assertEqual(json_equivalent('{"b":"x","a":1}', c, "member_order"), [])
+        self.assertEqual(json_equivalent('{"a":1}', c, "absent_default"), [])
+        self.assertEqual(json_equivalent('{"a":9007199254740993}', '{"a":"9007199254740993"}', "int_as_number"), [])
+        self.assertEqual(json_equivalent('{"k":"AQI"}', '{"k":"AQI"}'.replace('AQI','AQI'), "base64_padding") != [], True)  # identical text
+        self.assertEqual(json_equivalent('{"k":"AQI="}', '{"k":"AQI"}', "base64_padding"), [])
+        for variance, text in [("whitespace", '{"a":1.0,"b":"x"}'), ("whitespace", '{"a":"1","b":"x"}'),
+                               ("number_spelling", '{"a":"1","b":"x"}'), ("int_as_string", '{"a":2,"b":"x"}'),
+                               ("member_order", '{"a":1,"b":"x"}'), ("int_as_string", '{"a":1.5,"b":"x"}'),
+                               ("whitespace", '{"a":1,"b":"y"}'), ("whitespace", '{"a":1}'),
+                               ("absent_default", '{"a":1,"b":"x","c":1}'), ("whitespace", c)]:
+            self.assertTrue(json_equivalent(text, c, variance), (variance, text))
+
+    def test_encode_error_failures_must_be_real(self):
+        """REQ-RT-210/250/255: an expected failure must really be one."""
+        def enc(value, expect):
+            return {"value": value, "expect": expect}
+        nan = {"map": [[{"tstr": "ratio"}, {"f64": "NaN"}]]}
+        err = lambda kind, path, **kw: {"error": dict(kind=kind, path=path, **kw)}
+        self.assertEqual(check_encode_error(enc(nan, {"cbor": "a1657261746" + "96f" + "f97e00" if False else "a165726174696ff97e00", "json": err("not_representable", "ratio")}), ""), [])
+        self.assertTrue(check_encode_error(enc({"map": [[{"tstr": "ratio"}, {"f64": "1.5"}]]},
+                                               {"cbor": "a165726174696ff93e00", "json": err("not_representable", "ratio")}), ""))
+        half = {"map": [[{"tstr": "half"}, {"f16": "1.1"}]]}
+        self.assertEqual(check_encode_error(enc(half, {"cbor": err("not_representable", "half"),
+                                                       "json": err("not_representable", "half")}), ""), [])
+        ok_half = {"map": [[{"tstr": "half"}, {"f16": "1.5"}]]}
+        self.assertTrue(check_encode_error(enc(ok_half, {"cbor": err("not_representable", "half"),
+                                                         "json": err("not_representable", "half")}), ""))
+        lvl = {"map": [[{"tstr": "level"}, {"uint": "256"}]]}
+        both = {"cbor": err("out_of_range", "level", constraint="0..255"),
+                "json": err("out_of_range", "level", constraint="0..255")}
+        self.assertEqual(check_encode_error(enc(lvl, both), "Byte = 0..255"), [])
+        self.assertTrue(check_encode_error(enc({"map": [[{"tstr": "level"}, {"uint": "255"}]]}, both), "Byte = 0..255"))
 
     def test_real_corpus_is_clean(self):
         """REQ-ARCH-060: the committed corpus passes every check."""
