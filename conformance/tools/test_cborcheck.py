@@ -116,5 +116,73 @@ class Tests(unittest.TestCase):
         bad(self, "f8ff", "simple")
 
 
+class AnalyzeTests(unittest.TestCase):
+    """cborcheck.analyze: categorised findings (slice 1.3 plan §4)."""
+
+    def lists(self, hexstr):
+        a = cborcheck.analyze(h(hexstr))
+        return a.malformed, a.invalid, sorted({c for c, _ in a.nondeterministic}), a.outside_subset
+
+    def test_req_rt_180_indefinite_items_are_parsed_and_only_nondeterministic(self):
+        """REQ-RT-180: RFC 8949 Appendix A indefinite items are valid input."""
+        for x in ["5f42010243030405ff", "7f657374726561646d696e67ff", "9fff",
+                  "9f018202039f0405ffff", "9f01820203820405ff", "83018202039f0405ff",
+                  "83019f0203ff820405", "bf61610161629f0203ffff", "826161bf61626163ff",
+                  "bf6346756ef563416d7421ff",
+                  "9f0102030405060708090a0b0c0d0e0f101112131415161718181819ff"]:
+            mal, inv, nondet, out = self.lists(x)
+            self.assertEqual((mal, inv, out), ([], [], []), x)
+            self.assertIn("indefinite", nondet, x)
+
+    def test_req_rt_310_malformed_findings(self):
+        """REQ-RT-310: truncation, trailing bytes, reserved heads, stray break."""
+        for x in ["", "18", "6261", "8201", "a1", "a16161", "00 00", "1c", "ff", "f800", "9f01",
+                  "5f4101", "5f6161ff", "7f4161ff", "bf6161ff", "5f5f41 00ffff"]:
+            mal, *_ = self.lists(x)
+            self.assertTrue(mal, f"{x} should be malformed")
+
+    def test_req_rt_315_invalid_utf8_is_invalid_not_malformed(self):
+        """REQ-RT-315: well-formed CBOR whose text is not UTF-8."""
+        for x in ["62c328", "62c0af", "63eda080", "61ff", "7f62c328ff", "7f61c361a9ff"]:
+            mal, inv, *_ = self.lists(x)
+            self.assertEqual(mal, [], x)
+            self.assertTrue(inv, x)
+
+    def test_req_rt_300_duplicate_keys_are_invalid(self):
+        """REQ-RT-300: duplicates, adjacent or not, in sorted or unsorted maps."""
+        for x in ["a2 6161 01 6161 02", "a3 6162 01 6161 02 6162 03", "bf 6161 01 6161 02 ff"]:
+            mal, inv, *_ = self.lists(x)
+            self.assertEqual(mal, [], x)
+            self.assertTrue(any("duplicate" in e for e in inv), x)
+
+    def test_req_rt_180_each_nondeterminism_has_its_category(self):
+        """REQ-RT-160/180: the category names what departs from §4.2."""
+        cases = {
+            "head": ["1800", "190001", "9800", "58 01 61"],
+            "float": ["fa3fc00000", "fb3ff8000000000000"],
+            "nan": ["f97e01", "fa7fc00000"],
+            "key_order": ["a2 6162 02 6161 01", "a2 0a 00 01 00"],
+            "indefinite": ["9fff"],
+        }
+        for cat, xs in cases.items():
+            for x in xs:
+                mal, inv, nondet, out = self.lists(x)
+                self.assertEqual((mal, inv, out), ([], [], []), x)
+                self.assertEqual(nondet, [cat], x)
+
+    def test_req_rt_060_tags_and_undefined_are_well_formed_but_outside_the_subset(self):
+        """REQ-RT-060: a tag is a type mismatch for the schema, not malformed CBOR."""
+        for x in ["c11a514b67b0", "c249010000000000000000", "f7", "f0", "f8ff"]:
+            mal, inv, nondet, out = self.lists(x)
+            self.assertEqual((mal, inv), ([], []), x)
+            self.assertTrue(out, x)
+
+    def test_check_still_reports_everything_analyze_does(self):
+        """REQ-RT-160: check() is the union, so slice 1.2's callers are unaffected."""
+        self.assertEqual(cborcheck.check(h("a1 6161 01")), [])
+        for x in ["9fff", "1800", "c11a514b67b0", "62c328", "a2 6161 01 6161 02", "18"]:
+            self.assertTrue(cborcheck.check(h(x)), x)
+
+
 if __name__ == "__main__":
     unittest.main()

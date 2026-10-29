@@ -501,6 +501,34 @@ def _good_case():
     }
 
 
+def _doc(kind, case):
+    return {"manifest_version": 1, "schema": "s.cddl", "kind": kind, "cases": [case]}
+
+
+def _neg(**kw):
+    c = {"id": "s/a", "root": "T", "description": "d", "requirements": ["REQ-RT-060"],
+         "derivation": "hand-encoded", "input": {"cbor": "a1"}, "classification": "malformed",
+         "error": {"kind": "truncated"}}
+    c.update(kw)
+    return _doc("negative", c)
+
+
+def _noncanon(**kw):
+    c = {"id": "s/a", "root": "T", "description": "d", "requirements": ["REQ-RT-180"],
+         "derivation": "hand-encoded", "variance": "indefinite_length", "input": {"cbor": "9f01ff"},
+         "value": {"array": [{"uint": "1"}]}, "cbor": "8101", "json": "[1]"}
+    c.update(kw)
+    return _doc("noncanonical", c)
+
+
+def _enc(**kw):
+    c = {"id": "s/a", "root": "T", "description": "d", "requirements": ["REQ-RT-210"],
+         "derivation": "cbor2", "value": {"f64": "NaN"},
+         "expect": {"cbor": "f97e00", "json": {"error": {"kind": "not_representable", "path": ""}}}}
+    c.update(kw)
+    return _doc("encode_error", c)
+
+
 class Tests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -678,6 +706,41 @@ class Tests(unittest.TestCase):
         survivors, total = mutation_test(docs)
         self.assertEqual(survivors, [])
         self.assertGreater(total, 500)
+
+    # --- slice 1.3 ---------------------------------------------------------
+
+    def test_record_shapes_accept_good_records(self):
+        """REQ-ARCH-060: negative, noncanonical and encode_error records are defined."""
+        for d in (_neg(), _noncanon(), _enc(),
+                  _neg(classification="schema_invalid", input={"json": "{}"},
+                       error={"kind": "type_mismatch", "path": "a.b[2]"}),
+                  _neg(input={"cbor": ""}),
+                  _enc(expect={"cbor": {"error": {"kind": "out_of_range", "path": "level", "constraint": "0..255"}},
+                               "json": {"error": {"kind": "out_of_range", "path": "level"}}})):
+            self.assertEqual(check_case_instance(self.schema, d, "x"), [], d)
+
+    def test_record_shapes_reject_bad_records(self):
+        """REQ-ARCH-060: the shapes are closed and internally consistent."""
+        bad = [
+            _neg(input={"cbor": "a1", "json": "{}"}),                       # both encodings
+            _neg(input={}),                                                  # neither
+            _neg(input={"cbor": "A1"}),                                      # not lowercase hex
+            {**_neg(), "cases": [{k: v for k, v in _neg()["cases"][0].items() if k != "classification"}]},
+            _neg(error={"kind": "gremlins"}),                                # unknown kind
+            _neg(classification="invalid"),                                  # not one of the DoD's two
+            _neg(error={"kind": "truncated", "path": "a"}),                  # malformed carries no path
+            _neg(classification="schema_invalid", error={"kind": "type_mismatch"}),  # path required
+            _neg(classification="schema_invalid", error={"kind": "truncated", "path": ""}),  # wrong class
+            _neg(error={"kind": "type_mismatch"}),                           # wrong class, other way
+            _noncanon(variance="shuffled"),
+            _noncanon(input={"cbor": "9f01ff", "json": "[1]"}),
+            _enc(expect={"cbor": "f97e00", "json": "null"}),                # neither side is an error
+            _enc(expect={"json": {"error": {"kind": "not_representable", "path": ""}}}),
+            _enc(expect={"cbor": "f97e00", "json": {"error": {"kind": "malformed", "path": ""}}}),
+            _doc("evolution", {"id": "s/a"}),                                # still reserved for 1.4
+        ]
+        for d in bad:
+            self.assertTrue(check_case_instance(self.schema, d, "x"), d)
 
     def test_real_corpus_is_clean(self):
         """REQ-ARCH-060: the committed corpus passes every check."""
