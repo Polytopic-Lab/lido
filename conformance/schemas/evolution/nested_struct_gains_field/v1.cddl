@@ -1,0 +1,9 @@
+; Revision 1.
+Order = {
+  id: uint,
+  items: [* Item],
+}
+
+Item = {
+  sku: tstr,
+}

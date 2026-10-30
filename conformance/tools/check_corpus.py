@@ -403,7 +403,7 @@ def check_unique_ids(docs):
 
 
 def check_schemas_have_cases(schema_files, docs):
-    have = {d["schema"] for d in docs.values() if d["kind"] == "positive"}  # every schema needs positives
+    have = {d["schema"] for d in docs.values() if d["kind"] == "positive"}  # every top-level schema needs positives
     return [f"{s}: no positive case file" for s in sorted(set(schema_files) - have)]
 
 
@@ -865,6 +865,225 @@ def _encode_failure_is_real(case, enc, error, schema_text):
     return [f"{enc}: {payload} in a {tag} field encodes fine, so no error is expected"]
 
 
+# --- evolution pairs (slice 1.4) ---------------------------------------------
+
+SCENARIOS = ["add_optional_field", "add_defaulted_field", "add_uint_keyed_field", "append_array_element",
+             "declaration_order_independent", "nested_struct_gains_field", "unknown_value_types"]
+
+
+def _seg(parent, key):
+    """REQ-RT-066: append one segment to a path."""
+    if isinstance(key, int):
+        return f"{parent}[{key}]" if isinstance(parent, tuple) else f"{parent}.{key}" if parent else str(key)
+    return f"{parent}.{key}" if parent else key
+
+
+def _extras(a, b, path, out, errs):
+    """Walk `a` against `b`: everything in `b` must occur in `a` with an equal
+    value; entries that occur only in `a` are appended to `out` as paths."""
+    if isinstance(a, dict) and isinstance(b, dict):
+        for k, v in b.items():
+            if k not in a:
+                errs.append(f"{path or '<root>'}: {k!r} is missing")
+            else:
+                _extras(a[k], v, _seg(path, k), out, errs)
+        for k in a:
+            if k not in b:
+                out.append(_seg(path, k if isinstance(k, str) else str(k)))
+    elif isinstance(a, list) and isinstance(b, list):
+        if len(a) < len(b):
+            errs.append(f"{path or '<root>'}: array has {len(a)} element(s), {len(b)} expected")
+        for i in range(min(len(a), len(b))):
+            _extras(a[i], b[i], f"{path}[{i}]", out, errs)
+        for i in range(len(b), len(a)):
+            out.append(f"{path}[{i}]")
+    elif _plain(a) != _plain(b) or type(a) is not type(b) and not (
+            isinstance(a, (_Num, Decimal)) and isinstance(b, (_Num, Decimal))):
+        errs.append(f"{path or '<root>'}: {a!r} != {b!r}")
+
+
+def _generic(case, which):
+    """The generic decoded form of the case's `input`, or of its own canonical
+    `cbor`/`json` (`which` = "input" | "output"), in the input's encoding."""
+    inp = case["input"]
+    if "cbor" in inp:
+        return cbor2_strict(bytes.fromhex(inp["cbor"] if which == "input" else case["cbor"]))
+    return _plain(json_strict(inp["json"] if which == "input" else case["json"]))
+
+
+def json_compact(obj):
+    """Compact JSON text of a parsed document with numbers kept as spelled."""
+    if isinstance(obj, dict):
+        return "{" + ",".join(json_string(k) + ":" + json_compact(v) for k, v in obj.items()) + "}"
+    if isinstance(obj, list):
+        return "[" + ",".join(json_compact(v) for v in obj) + "]"
+    if isinstance(obj, _Num):
+        return str(obj)
+    if isinstance(obj, str):
+        return json_string(obj)
+    return {True: "true", False: "false", None: "null"}[obj]
+
+
+def check_evolution_case(case, texts):
+    """Slice 1.4 plan §4.2. `texts` maps "v1"/"v2" to the pair's schema text."""
+    errs = check_cbor(case) + check_json(case)  # the reader's vector is a positive vector
+    inp = case["input"]
+    if "cbor" in inp:
+        data = bytes.fromhex(inp["cbor"])
+        errs += [f"input: {e}" for e in cborcheck.check(data)]
+    else:
+        try:
+            doc = json_strict(inp["json"], hook=lambda ps: dict(ps))
+        except ValueError as e:
+            return errs + [f"input is not valid JSON: {e}"]
+        if json_compact(doc) != inp["json"]:
+            errs.append("input json is not the writer's compact canonical text")
+    if errs:
+        return errs
+    reader, writer = ("v1", "v2") if case["direction"] == "new_to_old" else ("v2", "v1")
+    for v in ("v1", "v2"):
+        if case["root"] not in schema_roots(texts[v]):
+            errs.append(f"root {case['root']!r} is not defined in {v}")
+    inp_g, out_g = _generic(case, "input"), _generic(case, "output")
+    found, mism = [], []
+    if case["direction"] == "new_to_old":
+        _extras(inp_g, out_g, "", found, mism)
+        want = sorted(case["ignored"])
+    else:
+        _extras(out_g, inp_g, "", found, mism)
+        want = sorted(case.get("populated", []))
+    errs += mism
+    if sorted(found) != want:
+        label = "ignored" if case["direction"] == "new_to_old" else "populated"
+        errs.append(f"{label} is {want} but the input and the reader's value differ at {sorted(found)}")
+    return errs
+
+
+def check_evolution_file(rel, doc, schema_texts, req_ids):
+    errs, pair = [], doc["pair"]
+    if rel != f"cases/evolution/{pair}.json":
+        errs.append(f"{rel}: must live at cases/evolution/{pair}.json")
+    for v in ("v1", "v2"):
+        if f"evolution/{pair}/{v}.cddl" not in schema_texts:
+            errs.append(f"{rel}: schemas/evolution/{pair}/{v}.cddl does not exist")
+    if errs:
+        return errs
+    if schema_texts[f"evolution/{pair}/v1.cddl"] == schema_texts[f"evolution/{pair}/v2.cddl"]:
+        errs.append(f"{rel}: v1 and v2 are identical")
+    scenarios = {c["scenario"] for c in doc["cases"]}
+    if len(scenarios) != 1:
+        errs.append(f"{rel}: a pair has exactly one scenario, found {sorted(scenarios)}")
+    for c in doc["cases"]:
+        if c["id"].split("/")[0] != pair:
+            errs.append(f"{c['id']}: id stem must be {pair!r}")
+        for r in c["requirements"]:
+            if r not in req_ids:
+                errs.append(f"{c['id']}: {r} does not exist in specs.md")
+    for direction in ("old_to_new", "new_to_old"):
+        for enc in ("cbor", "json"):
+            if not any(c["direction"] == direction and enc in c["input"] for c in doc["cases"]):
+                errs.append(f"{rel}: no {direction} case with a {enc} input")
+    return errs
+
+
+def check_scenarios_complete(docs):
+    have = {c["scenario"] for d in docs.values() if d["kind"] == "evolution" for c in d["cases"]}
+    return [f"scenario {s}: no pair" for s in SCENARIOS if s not in have]
+
+
+# --- the coverage manifest (slice 1.4) -----------------------------------------
+
+EXEMPT_CATEGORIES = ["api_shape", "dependency_policy", "build_constraint", "optional_behaviour",
+                     "configuration", "non_guarantee"]
+
+
+def section9_requirements(specs_text):
+    """The REQ ids of every bullet in specs.md section 9 (introduction and 9.x)."""
+    m = re.search(r"^## 9\. .*?\n(.*?)^## 10\. ", specs_text, re.S | re.M)
+    if not m:
+        raise ValueError("specs.md: section 9 not found")
+    ids = re.findall(r"^- \*\*(REQ-[A-Z]+-[0-9]{3})\*\*", m.group(1), re.M)
+    if not ids:
+        raise ValueError("specs.md: section 9 has no requirements")
+    return ids
+
+
+def plan_slices(plan_text):
+    """Slice ids in plan.md: `### 2.1 — Title` headings (phases 0-5) and
+    `| 8.7 | Task |` table rows (phases 6-10, which are sliced at kickoff)."""
+    return (set(re.findall(r"^### ([0-9]+\.[0-9]+) — ", plan_text, re.M))
+            | set(re.findall(r"^\| ([0-9]+\.[0-9]+) \|", plan_text, re.M)))
+
+
+def derive_coverage(docs, req_ids, implied):
+    """{req: sorted case ids}, over `req_ids`, from case tags and kind-implied ids."""
+    cov = {r: set() for r in req_ids}
+    for doc in docs.values():
+        for c in doc["cases"]:
+            for r in set(c["requirements"]) | set(implied.get(doc["kind"], [])):
+                if r in cov:
+                    cov[r].add(c["id"])
+    return {r: sorted(v) for r, v in cov.items()}
+
+
+def build_coverage(docs, req_ids, previous):
+    """The coverage.json document: regenerated `cases`, preserved hand-written
+    `implied_by_kind` and `exempt` entries."""
+    implied = previous.get("implied_by_kind", {})
+    derived = derive_coverage(docs, req_ids, implied)
+    old = previous.get("requirements", {})
+    reqs = {}
+    for r in req_ids:
+        entry = {}
+        if derived[r]:
+            entry["cases"] = derived[r]
+        if "exempt" in old.get(r, {}):
+            entry["exempt"] = old[r]["exempt"]
+        reqs[r] = entry
+    return {"manifest_version": 1, "scope": "specs.md §9", "implied_by_kind": implied, "requirements": reqs}
+
+
+def check_requirement_coverage(cov, docs, specs_text, plan_text):
+    """Slice 1.4 DoD: every §9 requirement has a case or a recorded exemption;
+    the file is fresh; exemptions are disciplined."""
+    errs = []
+    req_ids = section9_requirements(specs_text)
+    slices = plan_slices(plan_text)
+    implied = cov.get("implied_by_kind", {})
+    for kind, ids in implied.items():
+        for r in ids:
+            if r not in req_ids:
+                errs.append(f"implied_by_kind {kind}: {r} is not a specs.md §9 requirement")
+    entries = cov.get("requirements", {})
+    for r in sorted(set(entries) - set(req_ids)):
+        errs.append(f"{r}: in coverage.json but not a requirement in specs.md §9")
+    derived = derive_coverage(docs, req_ids, implied)
+    for r in req_ids:
+        e = entries.get(r)
+        if e is None:
+            errs.append(f"{r}: missing from coverage.json (no case and no exemption)")
+            continue
+        have, ex = derived[r], e.get("exempt")
+        if e.get("cases", []) != have:
+            errs.append(f"{r}: coverage.json cases are stale (run --write-coverage)")
+        if not have and not ex:
+            errs.append(f"{r}: no corpus case and no recorded exemption")
+        if have and ex:
+            errs.append(f"{r}: stale exemption: it now has cases ({len(have)})")
+        if ex:
+            if ex.get("category") not in EXEMPT_CATEGORIES:
+                errs.append(f"{r}: exemption category must be one of {EXEMPT_CATEGORIES}")
+            if not ex.get("reason", "").strip():
+                errs.append(f"{r}: exemption needs a reason")
+            t = ex.get("tested_in")
+            if t is None:
+                if ex.get("category") != "non_guarantee":
+                    errs.append(f"{r}: only a non_guarantee may omit tested_in")
+            elif not re.fullmatch(r"slice [0-9]+\.[0-9]+", t) or t.split()[1] not in slices:
+                errs.append(f"{r}: tested_in {t!r} is not a slice heading in plan.md")
+    return errs
+
+
 # --- driver ---------------------------------------------------------------
 
 
@@ -877,7 +1096,8 @@ def run(root, specs, check_format):
     schema = load(root / "manifest.schema.json")
     errs += check_manifest_schema(schema)
     index = load(root / "index.json")
-    schema_files = sorted(p.name for p in (root / "schemas").rglob("*.cddl"))
+    schema_files = sorted(p.relative_to(root / "schemas").as_posix() for p in (root / "schemas").rglob("*.cddl"))
+    top_schemas = [f for f in schema_files if "/" not in f]
     case_files = sorted(p.relative_to(root).as_posix() for p in (root / "cases").rglob("*.json"))
     errs += check_index(index, schema_files, case_files)
     docs = load_docs(root, case_files)
@@ -886,12 +1106,21 @@ def run(root, specs, check_format):
     if errs:
         return errs  # structure first: later checks assume a valid shape
     specs_text = specs.read_text(encoding="utf-8")
-    errs += check_coverage(load(root / "construct-coverage.json"), specs_text, {f[:-5] for f in schema_files})
+    plan_text = (specs.parent / "plan.md").read_text(encoding="utf-8")
+    errs += check_coverage(load(root / "construct-coverage.json"), specs_text, {f[:-5] for f in top_schemas})
     schema_texts = {f: (root / "schemas" / f).read_text(encoding="utf-8") for f in schema_files}
     req_ids = set(re.findall(r"REQ-[A-Z]+-[0-9]{3}", specs_text))
-    errs += check_schemas_have_cases(schema_files, docs)
+    errs += check_schemas_have_cases(top_schemas, docs)
     errs += check_unique_ids(docs)
+    errs += check_scenarios_complete(docs)
     for rel, doc in docs.items():
+        if doc["kind"] == "evolution":
+            errs += check_evolution_file(rel, doc, schema_texts, req_ids)
+            pair = doc["pair"]
+            texts = {v: schema_texts.get(f"evolution/{pair}/{v}.cddl", "") for v in ("v1", "v2")}
+            for case in doc["cases"]:
+                errs += [f"{case['id']}: {e}" for e in check_evolution_case(case, texts)]
+            continue
         errs += check_case_file(rel, doc, schema_texts, req_ids)
         stext = schema_texts.get(doc["schema"], "")
         for case in doc["cases"]:
@@ -904,10 +1133,25 @@ def run(root, specs, check_format):
             else:
                 found = check_encode_error(case, stext)
             errs += [f"{case['id']}: {e}" for e in found]
+    cov_path = root / "coverage.json"
+    if not cov_path.exists():
+        errs.append("coverage.json is missing (run --write-coverage)")
+    else:
+        errs += check_requirement_coverage(load(cov_path), docs, specs_text, plan_text)
     if check_format:
-        for rel in ["manifest.schema.json", "index.json", "construct-coverage.json", *case_files]:
-            errs += check_format_text((root / rel).read_text(encoding="utf-8"), rel)
+        for rel in ["manifest.schema.json", "index.json", "construct-coverage.json", "coverage.json", *case_files]:
+            if (root / rel).exists():
+                errs += check_format_text((root / rel).read_text(encoding="utf-8"), rel)
     return errs
+
+
+def write_coverage(root, specs):
+    case_files = sorted(p.relative_to(root).as_posix() for p in (root / "cases").rglob("*.json"))
+    path = root / "coverage.json"
+    previous = load(path) if path.exists() else {}
+    doc = build_coverage(load_docs(root, case_files), section9_requirements(specs.read_text(encoding="utf-8")), previous)
+    path.write_text(json.dumps(doc, indent=2, ensure_ascii=False) + "\n", encoding="utf-8", newline="\n")
+    return path
 
 
 # --- this tool's own tests --------------------------------------------------
@@ -970,6 +1214,15 @@ def _enc(**kw):
          "expect": {"cbor": "f97e00", "json": {"error": {"kind": "not_representable", "path": ""}}}}
     c.update(kw)
     return _doc("encode_error", c)
+
+
+def _evo_doc(**kw):
+    c = {"id": "p/a", "root": "T", "description": "d", "requirements": ["REQ-COMPAT-020"],
+         "derivation": "cbor2", "scenario": "add_optional_field", "direction": "new_to_old",
+         "input": {"cbor": "a2616101616202"}, "ignored": ["b"],
+         "value": {"map": [[{"tstr": "a"}, {"uint": "1"}]]}, "cbor": "a1616101", "json": '{"a":1}'}
+    c.update(kw)
+    return {"manifest_version": 1, "pair": "p", "kind": "evolution", "cases": [c]}
 
 
 class Tests(unittest.TestCase):
@@ -1324,6 +1577,147 @@ class Tests(unittest.TestCase):
         self.assertEqual(check_encode_error(enc(lvl, both), "Byte = 0..255"), [])
         self.assertTrue(check_encode_error(enc({"map": [[{"tstr": "level"}, {"uint": "255"}]]}, both), "Byte = 0..255"))
 
+    # --- slice 1.4 ---------------------------------------------------------
+
+    def test_evolution_record_shape(self):
+        """REQ-COMPAT-010/020: the evolution record and its `pair` envelope."""
+        self.assertEqual(check_case_instance(self.schema, _evo_doc(), "x"), [])
+        ok_old = _evo_doc(direction="old_to_new", populated=["b"])
+        del ok_old["cases"][0]["ignored"]
+        self.assertEqual(check_case_instance(self.schema, ok_old, "x"), [])
+        bad = [
+            dict(_evo_doc(), schema="s.cddl"),                          # schema on an evolution file
+            {k: v for k, v in _evo_doc().items() if k != "pair"},       # pair missing
+            _evo_doc(scenario="rename_field"),
+            _evo_doc(direction="sideways"),
+            _evo_doc(ignored=[]),                                        # new_to_old needs something ignored
+            _evo_doc(populated=["b"]),                                   # populated on new_to_old
+            _evo_doc(direction="old_to_new"),                            # ignored on old_to_new
+            dict(_good_case(), pair="p"),                                # pair on a positive file
+        ]
+        for d in bad:
+            self.assertTrue(check_case_instance(self.schema, d, "x"), d)
+
+    def test_index_is_path_based(self):
+        """REQ-ARCH-060: v1.cddl in two pairs does not collide."""
+        idx = {"schemas": ["a.cddl", "evolution/p/v1.cddl", "evolution/q/v1.cddl"], "cases": []}
+        self.assertEqual(check_index(idx, ["a.cddl", "evolution/p/v1.cddl", "evolution/q/v1.cddl"], []), [])
+        self.assertTrue(check_index(idx, ["a.cddl", "evolution/p/v1.cddl"], []))
+        self.assertEqual(check_schemas_have_cases(["a.cddl"], {"x": _good_case(), }), ["a.cddl: no positive case file"])
+
+    def test_evolution_case_verification(self):
+        """REQ-COMPAT-020/025: extras are really extra, really dropped, input is canonical."""
+        texts = {"v1": "T = {a: uint}\n", "v2": "T = {a: uint, ? b: uint}\n"}
+        good = _evo_doc()["cases"][0]
+        self.assertEqual(check_evolution_case(good, texts), [])
+        self.assertTrue(check_evolution_case(dict(good, ignored=["a"]), texts))          # wrong path
+        self.assertTrue(check_evolution_case(dict(good, ignored=["b", "c"]), texts))     # claims too much
+        self.assertTrue(check_evolution_case(dict(good, input={"cbor": "a2616202616101"}), texts))   # non-canonical input
+        self.assertTrue(check_evolution_case(dict(good, input={"cbor": "a1616101"}), texts))         # no extras at all
+        self.assertTrue(check_evolution_case(dict(good, cbor="a1616102", value={"map": [[{"tstr": "a"}, {"uint": "2"}]]}, json='{"a":2}'), texts))
+        self.assertTrue(check_evolution_case(dict(good, root="Missing"), texts))
+        js = dict(good, input={"json": '{"a":1,"b":2}'})
+        self.assertEqual(check_evolution_case(js, texts), [])
+        self.assertTrue(check_evolution_case(dict(js, input={"json": '{ "a":1,"b":2}'}), texts))     # whitespace: not canonical
+        old = dict(good, direction="old_to_new", input={"cbor": "a1616101"}, populated=["b"],
+                   value={"map": [[{"tstr": "a"}, {"uint": "1"}], [{"tstr": "b"}, {"uint": "7"}]]},
+                   cbor="a2616101616207", json='{"a":1,"b":7}')
+        del old["ignored"]
+        self.assertEqual(check_evolution_case(old, texts), [])
+        self.assertTrue(check_evolution_case(dict(old, populated=["c"]), texts))
+        self.assertTrue(check_evolution_case(dict(old, populated=["a"]), texts))
+        arr = {"direction": "new_to_old", "input": {"cbor": "83010203"}, "ignored": ["[2]"], "id": "p/a", "root": "T",
+               "value": {"array": [{"uint": "1"}, {"uint": "2"}]}, "cbor": "820102", "json": "[1,2]"}
+        self.assertEqual(check_evolution_case(arr, texts), [])
+
+    def test_evolution_file_requirements(self):
+        """REQ-COMPAT-010/020: each pair has both directions in both encodings, one scenario, two revisions."""
+        texts = {"evolution/p/v1.cddl": "T = {a: uint}\n", "evolution/p/v2.cddl": "T = {a: uint, ? b: uint}\n"}
+        doc = _evo_doc()
+        errs = check_evolution_file("cases/evolution/p.json", doc, texts, {"REQ-COMPAT-020"})
+        self.assertTrue(any("old_to_new case with a cbor" in e for e in errs))               # incomplete directions
+        self.assertTrue(check_evolution_file("cases/evolution/q.json", doc, texts, {"REQ-COMPAT-020"}))
+        self.assertTrue(check_evolution_file("cases/evolution/p.json", doc, {k: texts["evolution/p/v1.cddl"] for k in texts}, set()))
+        self.assertEqual(len(check_scenarios_complete({"a": doc})), len(SCENARIOS) - 1)
+
+    SPECS9 = """\
+## 9. Runtime
+- **REQ-RT-010** x
+- **REQ-RT-020** y
+### 9.1 Sub
+- **REQ-RT-160** z
+- **REQ-COMPAT-040** n
+## 10. Next
+- **REQ-CLI-010** not in scope
+"""
+    PLAN = "### 2.1 — A\n| 9.4 | B | L |\n"
+
+    def _cov_docs(self, tags):
+        return {"a": {"kind": "positive", "cases": [{"id": "s/a", "requirements": tags}]}}
+
+    def _cov(self, docs, **over):
+        implied = {"positive": ["REQ-RT-010"]}
+        cov = build_coverage(docs, ["REQ-RT-010", "REQ-RT-020", "REQ-RT-160", "REQ-COMPAT-040"],
+                             {"implied_by_kind": implied, "requirements": {
+                                 "REQ-RT-020": {"exempt": {"category": "api_shape", "reason": "r", "tested_in": "slice 2.1"}},
+                                 "REQ-COMPAT-040": {"exempt": {"category": "non_guarantee", "reason": "r", "tested_in": None}}}})
+        cov.update(over)
+        return cov
+
+    def test_coverage_requirement_ids_come_from_section_9(self):
+        """specs.md §9: the introduction and every 9.x, nothing from §10."""
+        self.assertEqual(section9_requirements(self.SPECS9),
+                         ["REQ-RT-010", "REQ-RT-020", "REQ-RT-160", "REQ-COMPAT-040"])
+
+    def test_coverage_complete_and_fresh(self):
+        """Slice 1.4 DoD: a case or an exemption for every §9 requirement; CI fails otherwise."""
+        docs = self._cov_docs(["REQ-RT-160"])
+        self.assertEqual(check_requirement_coverage(self._cov(docs), docs, self.SPECS9, self.PLAN), [])
+        # a requirement added to §9 with no case and no exemption
+        more = self.SPECS9.replace("### 9.1 Sub", "- **REQ-RT-025** new\n### 9.1 Sub")
+        self.assertTrue(any("REQ-RT-025" in e for e in check_requirement_coverage(self._cov(docs), docs, more, self.PLAN)))
+        # an id in the manifest that is not in §9
+        cov = self._cov(docs)
+        cov["requirements"]["REQ-RT-999"] = {"cases": ["s/a"]}
+        self.assertTrue(check_requirement_coverage(cov, docs, self.SPECS9, self.PLAN))
+        # a case re-tagged (or added) without regenerating
+        retagged = self._cov_docs(["REQ-RT-160", "REQ-RT-020"])
+        errs = check_requirement_coverage(self._cov(docs), retagged, self.SPECS9, self.PLAN)
+        self.assertTrue(any("stale" in e for e in errs), errs)
+        # a case deleted without regenerating
+        self.assertTrue(check_requirement_coverage(self._cov(docs), self._cov_docs([]), self.SPECS9, self.PLAN))
+        # a hand-edited cases list
+        cov = self._cov(docs)
+        cov["requirements"]["REQ-RT-160"]["cases"] = ["s/a", "s/ghost"]
+        self.assertTrue(check_requirement_coverage(cov, docs, self.SPECS9, self.PLAN))
+
+    def test_coverage_exemption_discipline(self):
+        """Slice 1.4 plan §4.3: an exemption needs a category, a reason and a real slice; none may linger."""
+        docs = self._cov_docs(["REQ-RT-160"])
+
+        def with_exempt(**kw):
+            cov = self._cov(docs)
+            ex = dict(cov["requirements"]["REQ-RT-020"]["exempt"], **kw)
+            cov["requirements"]["REQ-RT-020"]["exempt"] = ex
+            return check_requirement_coverage(cov, docs, self.SPECS9, self.PLAN)
+        self.assertEqual(with_exempt(), [])
+        self.assertTrue(with_exempt(reason=" "))
+        self.assertTrue(with_exempt(category="because"))
+        self.assertTrue(with_exempt(tested_in="slice 7.7"))        # no such heading in plan.md
+        self.assertTrue(with_exempt(tested_in=None))               # only a non_guarantee may omit it
+        self.assertTrue(with_exempt(tested_in="2.1"))
+        self.assertEqual(with_exempt(tested_in="slice 9.4"), [])      # a table-row slice (phases 6-10)
+        # stale: a case now tests a requirement that is still marked exempt
+        tagged = self._cov_docs(["REQ-RT-160", "REQ-RT-020"])
+        cov = self._cov(docs)
+        cov["requirements"]["REQ-RT-020"]["cases"] = ["s/a"]
+        errs = check_requirement_coverage(cov, tagged, self.SPECS9, self.PLAN)
+        self.assertTrue(any("stale exemption" in e for e in errs), errs)
+        # implied_by_kind may only name §9 requirements
+        cov = self._cov(docs)
+        cov["implied_by_kind"]["positive"].append("REQ-KEY-010")
+        self.assertTrue(check_requirement_coverage(cov, docs, self.SPECS9, self.PLAN))
+
     def test_real_corpus_is_clean(self):
         """REQ-ARCH-060: the committed corpus passes every check."""
         self.assertEqual(run(CONFORMANCE, SPECS, True), [])
@@ -1334,6 +1728,8 @@ def main():
     ap.add_argument("--check-format", action="store_true")
     ap.add_argument("--self-test", action="store_true")
     ap.add_argument("--mutation-test", action="store_true")
+    ap.add_argument("--write-coverage", action="store_true",
+                    help="regenerate coverage.json (keeps its hand-written exemptions)")
     ap.add_argument("--without-cborcheck", action="store_true", help="with --mutation-test: disable cborcheck")
     args = ap.parse_args()
     if args.self_test:
@@ -1345,6 +1741,9 @@ def main():
         )
         result = unittest.TextTestRunner(verbosity=2).run(suite)
         return 0 if result.wasSuccessful() else 1
+    if args.write_coverage:
+        print(f"wrote {write_coverage(CONFORMANCE, SPECS)}")
+        return 0
     if args.mutation_test:
         case_files = sorted(p.relative_to(CONFORMANCE).as_posix() for p in (CONFORMANCE / "cases").rglob("*.json"))
         survivors, total = mutation_test(load_docs(CONFORMANCE, case_files), not args.without_cborcheck)

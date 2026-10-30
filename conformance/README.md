@@ -18,7 +18,9 @@ conformance/
 ├── manifest.schema.json      JSON Schema 2020-12 for case files
 ├── index.json                every schema file and every case file
 ├── construct-coverage.json   specs.md §3 construct -> schema
+├── coverage.json             specs.md §9 requirement -> cases, or an exemption (generated)
 ├── schemas/<name>.cddl       one construct group per file
+├── schemas/evolution/<pair>/v1.cddl, v2.cddl   old and new revisions of a schema
 ├── cases/<kind>/<name>.json  one file per (schema, kind); kinds below
 └── tools/                    check_corpus.py, cborcheck.py, test_cborcheck.py, requirements.txt
 ```
@@ -43,9 +45,8 @@ trailing newline (`.gitattributes` forces LF).
 }
 ```
 
-`kind` is `positive`, `negative`, `noncanonical`, or `evolution`. Only
-`positive` has a defined record today; the schema rejects the others until
-slices 1.3 and 1.4 define them.
+`kind` is `positive`, `negative`, `noncanonical`, `encode_error` or
+`evolution`; each has its own record, below.
 
 ### Positive case
 
@@ -138,6 +139,58 @@ decode to `value`, and exhibit the departure its `variance` names; a JSON one
 must equal the canonical text after exactly that relaxation. What cannot be
 confirmed without a CDDL validator is that a `schema_invalid` input really is
 not an instance of its `root`; the path and range checks narrow that gap.
+
+## Evolution pairs
+
+`cases/evolution/<pair>.json` has `"pair": "<pair>"` instead of `"schema"`; the
+two revisions are `schemas/evolution/<pair>/v1.cddl` (old) and `v2.cddl` (new).
+Each case says what a **reader** of one revision does with the **canonical
+output of a writer** of the other:
+
+- `scenario`: one of `add_optional_field`, `add_defaulted_field`,
+  `add_uint_keyed_field`, `append_array_element`, `declaration_order_independent`,
+  `nested_struct_gains_field`, `unknown_value_types` (the ways specs.md §9.6
+  guarantees a schema may grow; one pair each).
+- `direction`: `new_to_old` (REQ-COMPAT-020/060: v1 reads v2 output; unknown map
+  entries and extra trailing array elements are discarded) or `old_to_new`
+  (REQ-COMPAT-010: v2 reads v1 output; absent fields are absent or defaulted).
+- `input`: the writer's canonical output, `{"cbor": …}` or `{"json": …}`.
+- `value`, `cbor`, `json`: the **reader's** canonical vector — what it decodes to
+  and would re-emit. Discarded fields are *not* in it (REQ-COMPAT-025).
+- `ignored` (`new_to_old`, required): the paths of input entries the reader
+  discards. `populated` (`old_to_new`, optional): the paths the reader fills in,
+  e.g. a default. Paths follow REQ-RT-066 and must be exact.
+
+The check confirms the reader's vector is an ordinary positive vector, the input
+is the writer's canonical form, and that the paths named are exactly where the
+input and the reader's value differ. Not confirmed (it needs a CDDL validator):
+that v2 is a purely additive extension of v1. A compatibility *non*-guarantee
+(REQ-COMPAT-040) has no expected outcome and so no vectors.
+
+## Requirement coverage
+
+`coverage.json` maps every requirement in specs.md §9 (introduction and
+§9.1–§9.8) to the ids of the cases that test it, or to an **exemption**:
+
+```json
+"REQ-RT-110": { "exempt": { "category": "build_constraint", "reason": "…", "tested_in": "slice 2.7" } }
+```
+
+- `cases` are **generated**: every case appears under each requirement in its
+  own `requirements`, plus those in `implied_by_kind` (every `positive` vector
+  is an encode and decode of both formats, so it covers REQ-RT-010/020/030/040/050/170).
+  `check_corpus.py --write-coverage` regenerates them and keeps the
+  hand-written `implied_by_kind` and `exempt` entries; the default run fails if
+  the file is stale.
+- A requirement with neither a case nor an exemption fails the check, so a
+  requirement added to specs.md §9 stops CI until it is covered or exempted.
+- An exemption needs a `category` (`api_shape`, `dependency_policy`,
+  `build_constraint`, `optional_behaviour`, `configuration`, `non_guarantee`), a
+  `reason`, and `tested_in` naming a slice that exists in plan.md; only
+  `non_guarantee` may omit it. An exempt requirement that gains a case fails as
+  a stale exemption.
+- It is not `construct-coverage.json`, which answers a different question
+  (specs.md §3 constructs → schemas).
 
 ## Schemas and construct coverage
 

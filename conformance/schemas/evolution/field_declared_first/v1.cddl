@@ -1,0 +1,5 @@
+; Revision 1.
+Account = {
+  id: uint,
+  balance: int,
+}

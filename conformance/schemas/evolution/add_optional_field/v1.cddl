@@ -1,0 +1,5 @@
+; Revision 1.
+Person = {
+  name: tstr,
+  age: uint,
+}

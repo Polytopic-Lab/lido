@@ -4,7 +4,7 @@
   "title": "Lido conformance case file",
   "description": "One file per (schema, kind). See conformance/README.md and D-007.",
   "type": "object",
-  "required": ["manifest_version", "schema", "kind", "cases"],
+  "required": ["manifest_version", "kind", "cases"],
   "properties": {
     "$schema": { "type": "string" },
     "manifest_version": { "const": 1 },
@@ -12,6 +12,11 @@
       "description": "File name of the CDDL schema under schemas/.",
       "type": "string",
       "pattern": "^[a-z][a-z0-9_]*\\.cddl$"
+    },
+    "pair": {
+      "description": "evolution files only: the name of the pair under schemas/evolution/.",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$"
     },
     "kind": {
       "enum": ["positive", "negative", "noncanonical", "encode_error", "evolution"]
@@ -45,9 +50,16 @@
       }
     },
     {
-      "$comment": "The evolution record is defined by slice 1.4; until then no case may take that shape.",
       "if": { "properties": { "kind": { "const": "evolution" } } },
-      "then": { "properties": { "cases": false } }
+      "then": {
+        "required": ["pair"],
+        "not": { "required": ["schema"] },
+        "properties": { "cases": { "items": { "$ref": "#/$defs/evolutionCase" } } }
+      },
+      "else": {
+        "required": ["schema"],
+        "not": { "required": ["pair"] }
+      }
     }
   ],
   "$defs": {
@@ -341,6 +353,39 @@
         }
       },
       "additionalProperties": false
+    },
+    "evolutionCase": {
+      "description": "An old/new schema pair: a reader of one revision decodes the other revision's canonical output (REQ-COMPAT-010/020/060). value, cbor and json are the READER's canonical vector.",
+      "type": "object",
+      "required": ["id", "root", "description", "requirements", "derivation", "scenario", "direction", "input", "value", "cbor", "json"],
+      "properties": {
+        "id": { "$ref": "#/$defs/positiveCase/properties/id" },
+        "root": { "$ref": "#/$defs/positiveCase/properties/root" },
+        "description": { "$ref": "#/$defs/positiveCase/properties/description" },
+        "requirements": { "$ref": "#/$defs/positiveCase/properties/requirements" },
+        "derivation": { "$ref": "#/$defs/positiveCase/properties/derivation" },
+        "scenario": {
+          "enum": [
+            "add_optional_field", "add_defaulted_field", "add_uint_keyed_field", "append_array_element",
+            "declaration_order_independent", "nested_struct_gains_field", "unknown_value_types"
+          ]
+        },
+        "direction": { "enum": ["old_to_new", "new_to_old"] },
+        "input": { "$ref": "#/$defs/input" },
+        "ignored": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string" } },
+        "populated": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string" } },
+        "value": { "$ref": "#/$defs/value" },
+        "cbor": { "$ref": "#/$defs/positiveCase/properties/cbor" },
+        "json": { "$ref": "#/$defs/positiveCase/properties/json" }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": { "properties": { "direction": { "const": "new_to_old" } } },
+          "then": { "required": ["ignored"], "not": { "required": ["populated"] } },
+          "else": { "not": { "required": ["ignored"] } }
+        }
+      ]
     },
     "uintString": { "type": "string", "pattern": "^(0|[1-9][0-9]*)$" },
     "intString": { "type": "string", "pattern": "^(0|-?[1-9][0-9]*)$" },

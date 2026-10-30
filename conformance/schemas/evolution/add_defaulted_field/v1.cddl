@@ -1,0 +1,4 @@
+; Revision 1.
+Settings = {
+  name: tstr,
+}

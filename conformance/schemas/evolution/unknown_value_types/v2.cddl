@@ -1,0 +1,19 @@
+; Revision 2 adds optional fields of every kind of value, so an old reader
+; must discard an unknown value of any type without knowing it (REQ-COMPAT-020).
+Probe = {
+  id: uint,
+  ? blob: bstr,
+  ? ratio: float64,
+  ? flag: bool,
+  ? nothing: null,
+  ? tags: [* tstr],
+  ? point: Point,
+  ? scores: Scores,
+}
+
+Point = {
+  x: int,
+  y: int,
+}
+
+Scores = { * tstr => int }

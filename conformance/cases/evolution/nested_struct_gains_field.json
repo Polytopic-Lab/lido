@@ -1,0 +1,62 @@
+{
+  "$schema": "../../manifest.schema.json",
+  "manifest_version": 1,
+  "pair": "nested_struct_gains_field",
+  "kind": "evolution",
+  "cases": [
+    {
+      "id": "nested_struct_gains_field/new_writer_old_reader_cbor",
+      "root": "Order",
+      "description": "the new writer's output decoded by the old reader: items[0].note, items[1].note discarded",
+      "requirements": ["REQ-COMPAT-020", "REQ-COMPAT-025"],
+      "derivation": "cbor2",
+      "scenario": "nested_struct_gains_field",
+      "direction": "new_to_old",
+      "input": {"cbor": "a262696401656974656d7382a263736b756161646e6f74656766726167696c65a263736b756162646e6f74656467696674"},
+      "ignored": ["items[0].note", "items[1].note"],
+      "value": {"map": [[{"tstr": "id"}, {"uint": "1"}], [{"tstr": "items"}, {"array": [{"map": [[{"tstr": "sku"}, {"tstr": "a"}]]}, {"map": [[{"tstr": "sku"}, {"tstr": "b"}]]}]}]]},
+      "cbor": "a262696401656974656d7382a163736b756161a163736b756162",
+      "json": "{\"id\":1,\"items\":[{\"sku\":\"a\"},{\"sku\":\"b\"}]}"
+    },
+    {
+      "id": "nested_struct_gains_field/old_writer_new_reader_cbor",
+      "root": "Order",
+      "description": "the old writer's output decoded by the new reader",
+      "requirements": ["REQ-COMPAT-010"],
+      "derivation": "cbor2",
+      "scenario": "nested_struct_gains_field",
+      "direction": "old_to_new",
+      "input": {"cbor": "a262696401656974656d7382a163736b756161a163736b756162"},
+      "value": {"map": [[{"tstr": "id"}, {"uint": "1"}], [{"tstr": "items"}, {"array": [{"map": [[{"tstr": "sku"}, {"tstr": "a"}]]}, {"map": [[{"tstr": "sku"}, {"tstr": "b"}]]}]}]]},
+      "cbor": "a262696401656974656d7382a163736b756161a163736b756162",
+      "json": "{\"id\":1,\"items\":[{\"sku\":\"a\"},{\"sku\":\"b\"}]}"
+    },
+    {
+      "id": "nested_struct_gains_field/new_writer_old_reader_json",
+      "root": "Order",
+      "description": "the new writer's output decoded by the old reader: items[0].note, items[1].note discarded",
+      "requirements": ["REQ-COMPAT-020", "REQ-COMPAT-025"],
+      "derivation": "cbor2",
+      "scenario": "nested_struct_gains_field",
+      "direction": "new_to_old",
+      "input": {"json": "{\"id\":1,\"items\":[{\"sku\":\"a\",\"note\":\"fragile\"},{\"sku\":\"b\",\"note\":\"gift\"}]}"},
+      "ignored": ["items[0].note", "items[1].note"],
+      "value": {"map": [[{"tstr": "id"}, {"uint": "1"}], [{"tstr": "items"}, {"array": [{"map": [[{"tstr": "sku"}, {"tstr": "a"}]]}, {"map": [[{"tstr": "sku"}, {"tstr": "b"}]]}]}]]},
+      "cbor": "a262696401656974656d7382a163736b756161a163736b756162",
+      "json": "{\"id\":1,\"items\":[{\"sku\":\"a\"},{\"sku\":\"b\"}]}"
+    },
+    {
+      "id": "nested_struct_gains_field/old_writer_new_reader_json",
+      "root": "Order",
+      "description": "the old writer's output decoded by the new reader",
+      "requirements": ["REQ-COMPAT-010"],
+      "derivation": "cbor2",
+      "scenario": "nested_struct_gains_field",
+      "direction": "old_to_new",
+      "input": {"json": "{\"id\":1,\"items\":[{\"sku\":\"a\"},{\"sku\":\"b\"}]}"},
+      "value": {"map": [[{"tstr": "id"}, {"uint": "1"}], [{"tstr": "items"}, {"array": [{"map": [[{"tstr": "sku"}, {"tstr": "a"}]]}, {"map": [[{"tstr": "sku"}, {"tstr": "b"}]]}]}]]},
+      "cbor": "a262696401656974656d7382a163736b756161a163736b756162",
+      "json": "{\"id\":1,\"items\":[{\"sku\":\"a\"},{\"sku\":\"b\"}]}"
+    }
+  ]
+}

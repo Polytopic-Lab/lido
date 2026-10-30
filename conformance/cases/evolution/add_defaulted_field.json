@@ -1,0 +1,64 @@
+{
+  "$schema": "../../manifest.schema.json",
+  "manifest_version": 1,
+  "pair": "add_defaulted_field",
+  "kind": "evolution",
+  "cases": [
+    {
+      "id": "add_defaulted_field/new_writer_old_reader_cbor",
+      "root": "Settings",
+      "description": "the new writer's output decoded by the old reader: retries discarded",
+      "requirements": ["REQ-COMPAT-020", "REQ-COMPAT-025", "REQ-RT-080", "REQ-RT-190"],
+      "derivation": "cbor2",
+      "scenario": "add_defaulted_field",
+      "direction": "new_to_old",
+      "input": {"cbor": "a2646e616d65616e677265747269657305"},
+      "ignored": ["retries"],
+      "value": {"map": [[{"tstr": "name"}, {"tstr": "n"}]]},
+      "cbor": "a1646e616d65616e",
+      "json": "{\"name\":\"n\"}"
+    },
+    {
+      "id": "add_defaulted_field/old_writer_new_reader_cbor",
+      "root": "Settings",
+      "description": "the old writer's output decoded by the new reader",
+      "requirements": ["REQ-COMPAT-010", "REQ-RT-080", "REQ-RT-190"],
+      "derivation": "cbor2",
+      "scenario": "add_defaulted_field",
+      "direction": "old_to_new",
+      "input": {"cbor": "a1646e616d65616e"},
+      "populated": ["retries"],
+      "value": {"map": [[{"tstr": "name"}, {"tstr": "n"}], [{"tstr": "retries"}, {"uint": "3"}]]},
+      "cbor": "a2646e616d65616e677265747269657303",
+      "json": "{\"name\":\"n\",\"retries\":3}"
+    },
+    {
+      "id": "add_defaulted_field/new_writer_old_reader_json",
+      "root": "Settings",
+      "description": "the new writer's output decoded by the old reader: retries discarded",
+      "requirements": ["REQ-COMPAT-020", "REQ-COMPAT-025", "REQ-RT-080", "REQ-RT-190"],
+      "derivation": "cbor2",
+      "scenario": "add_defaulted_field",
+      "direction": "new_to_old",
+      "input": {"json": "{\"name\":\"n\",\"retries\":5}"},
+      "ignored": ["retries"],
+      "value": {"map": [[{"tstr": "name"}, {"tstr": "n"}]]},
+      "cbor": "a1646e616d65616e",
+      "json": "{\"name\":\"n\"}"
+    },
+    {
+      "id": "add_defaulted_field/old_writer_new_reader_json",
+      "root": "Settings",
+      "description": "the old writer's output decoded by the new reader",
+      "requirements": ["REQ-COMPAT-010", "REQ-RT-080", "REQ-RT-190"],
+      "derivation": "cbor2",
+      "scenario": "add_defaulted_field",
+      "direction": "old_to_new",
+      "input": {"json": "{\"name\":\"n\"}"},
+      "populated": ["retries"],
+      "value": {"map": [[{"tstr": "name"}, {"tstr": "n"}], [{"tstr": "retries"}, {"uint": "3"}]]},
+      "cbor": "a2646e616d65616e677265747269657303",
+      "json": "{\"name\":\"n\",\"retries\":3}"
+    }
+  ]
+}

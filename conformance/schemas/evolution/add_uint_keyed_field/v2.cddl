@@ -1,0 +1,6 @@
+; Revision 2 takes the previously unused key 3 (REQ-COMPAT-035).
+Header = {
+  1: int,
+  2: bstr,
+  ? 3: tstr,
+}

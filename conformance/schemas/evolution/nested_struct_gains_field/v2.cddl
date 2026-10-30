@@ -1,0 +1,10 @@
+; Revision 2: a struct nested in an array gains an optional field.
+Order = {
+  id: uint,
+  items: [* Item],
+}
+
+Item = {
+  sku: tstr,
+  ? note: tstr,
+}

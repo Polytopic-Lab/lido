@@ -1,0 +1,6 @@
+; Revision 2 adds an optional field (REQ-COMPAT-010/020).
+Person = {
+  name: tstr,
+  age: uint,
+  ? email: tstr,
+}

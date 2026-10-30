@@ -662,3 +662,63 @@ validator should add "every positive case validates, every negative is
 rejected" under `crates/`, outside the zero-Lido-code gate. REQ-RT-270/280/290
 have no vector and must be exempted, with a reason, by slice 1.4's coverage
 manifest.
+
+## D-011 — Evolution pairs and the requirement-coverage manifest
+Date: 2026-10-29 · Closes: slice 1.4 plan §5 Q1–Q9; extends D-007 §1–§2 · Phase: 1
+
+Decision: six parts.
+
+1. **Scope is all of specs.md §9**, parsed from `## 9.` to `## 10.`, including
+   the requirements in §9's introduction (REQ-RT-010–100), not only §9.1–§9.8.
+2. **`coverage.json` is generated, then committed.** For each §9 requirement it
+   lists the ids of the cases that name it, or a recorded exemption.
+   `check_corpus.py --write-coverage` regenerates the case lists and keeps the
+   hand-written `implied_by_kind` and `exempt` entries; the default run fails if
+   the file differs from what the cases imply. It is distinct from
+   `construct-coverage.json` (D-007), which maps §3 constructs to schemas.
+3. **`implied_by_kind`.** Every `positive` vector covers REQ-RT-010/020/030/040/
+   050/170 (the four codec entry points, CBOR/JSON agreement, byte-identical
+   output) without 88 existing records being edited to say so. Only `positive`
+   implies anything; a negative vector's raised error does not establish that
+   decoding works.
+4. **Exemptions.** A requirement a byte-exact vector cannot test is exempt, with
+   a `category` from a closed set, a `reason`, and `tested_in` naming a slice
+   that exists in plan.md (a `### N.M` heading or a `| N.M |` task row). Only
+   `non_guarantee` may omit `tested_in`, because there is nothing to test. An
+   exempt requirement that also has a case fails ("stale exemption"). Sixteen
+   are recorded at this slice: REQ-RT-090, 095, 097, 098, 100, 110, 120, 130,
+   140, 150, 260, 270, 280, 290 and REQ-COMPAT-040, 050. The `tested_in`
+   values for RT-100, 130, 140, 150, 260 are judgements (plan.md does not name
+   them) and were flagged in the slice 1.4 PR.
+5. **The `evolution` kind** (reserved by D-007): an envelope with `pair` in
+   place of `schema`; revisions at `schemas/evolution/<pair>/{v1,v2}.cddl`; a
+   case records `scenario` (seven values, one pair each), `direction`, the
+   writer's canonical `input`, `ignored`/`populated` paths, and the reader's
+   canonical `value`/`cbor`/`json`. `manifest_version` stays 1 (no harness
+   exists yet), as for `encode_error` (D-010).
+6. **The check runs in the existing `conformance` job** as the default
+   `check_corpus.py` run, so it is already a required check (D-009). No CI edit
+   and no new branch-protection entry. A coverage failure is attributable
+   because every message begins with the requirement or case id.
+
+Alternatives: a hand-written manifest with a consistency check (rejected — it
+can be wrong by hand and duplicates what the cases already say); editing 88
+cases to tag the six implied requirements (rejected — expected-value files stay
+untouched); counting exempt requirements as covered by an unrelated vector
+(rejected — dishonest); a separate required "requirement-coverage" job
+(rejected — another protection edit for no extra information).
+
+Rationale: the DoD asks that CI fail when a requirement has no case. That is
+only meaningful if every requirement can either have one or say, checkably,
+why it cannot and who tests it instead.
+
+Consequences: every future case is a diff to `coverage.json` (regenerate it);
+a new §9 requirement must be covered or exempted in the PR that adds it, which
+is the intended pressure. `tested_in` for the `build_constraint` and
+`api_shape` exemptions is a promise later slices must keep or re-point. That v2
+is a purely additive extension of v1 is not machine-confirmed in Phase 1 (no
+CDDL validator); the Phase 3 corpus-validates-against-schemas check covers
+positive, negative and evolution vectors together. plan.md slice 2.3's DoD
+asks for an "input offset" on every malformed-CBOR error; D-010 pins no
+offsets, so that clause cannot be checked against the corpus and should be
+revisited when slice 2.1 designs the error types.

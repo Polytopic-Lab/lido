@@ -1,0 +1,7 @@
+; Revision 2 declares the new field FIRST; its wire key still comes from
+; the schema, not from declaration order (REQ-COMPAT-030, REQ-KEY-050).
+Account = {
+  ? nickname: tstr,
+  id: uint,
+  balance: int,
+}
