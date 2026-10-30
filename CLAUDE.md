@@ -2,8 +2,9 @@
 
 A CDDL-to-DTO compiler in Rust: parses CDDL schemas and generates
 encoding-independent DTOs plus a runtime library for C++, Java, and Rust.
-**Current phase: 0 — foundations.** The workspace exists; the compiler does
-not.
+**Current phase: 2 — the Rust runtime library.** Phases 0–1 are done: the
+workspace, CI, and the conformance corpus (`conformance/`) exist; the compiler
+does not.
 
 ## Documents
 
@@ -20,8 +21,7 @@ Process and sequencing — not normative:
 - `doc/plan.md` — phases and slices, each with its own DoD
 - `doc/development.md` — the loop, the gates, prompt shapes
 - `doc/slices/*.md` — per-slice implementation plans, historical
-- `doc/rust-style.md` — Lido's own Rust style (written at Phase 2 kickoff;
-  does not exist yet)
+- `doc/rust-style.md` — Lido's own Rust style (the self-review checklist)
 
 ## Non-negotiables
 
