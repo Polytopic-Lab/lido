@@ -26,11 +26,9 @@ sentence here whenever a lint exists.
 
 ## Safety
 
-- No `unsafe` in the runtime (REQ-PERF-070). Elsewhere the default is the
-  same: each crate has `#![forbid(unsafe_code)]`, and removing it is a decision
-  for `doc/decisions.md`, not a line in a diff.
-- No hand-rolled float formatting or parsing, and no hand-written SIMD, in the
-  runtime (REQ-PERF-070). Use a dependency (REQ-RT-100).
+- No `unsafe` in the runtime (REQ-PERF-070): `runtime/rust` has
+  `#![forbid(unsafe_code)]`, and removing it is a decision for
+  `doc/decisions.md`, not a line in a diff.
 
 ## Ownership
 
