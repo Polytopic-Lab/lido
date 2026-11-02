@@ -5,3 +5,17 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
+
+[features]
+# `std` is on by default; the core is written against `core` and `alloc` so
+# that slice 2.7's `no_std` build is a flag, not a rewrite (rust-style.md,
+# REQ-RT-110).
+default = ["std"]
+std = ["thiserror/std"]
+
+[dependencies]
+thiserror = { version = "2", default-features = false }
+
+[dev-dependencies]
+# Reads the conformance corpus in tests/corpus_vocabulary.rs (slice 2.1 plan Q9).
+serde_json = "1"
