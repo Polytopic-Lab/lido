@@ -235,7 +235,16 @@ and duplicate-key detection each have dedicated tests.
 `bstr`, NaN/∞ rejection, big-integer string form, integer-keyed maps as
 decimal member names.
 
-**Requirements.** specs.md §9.2 in full.
+**Requirements.** specs.md §9.2 in full, plus the JSON document form of
+REQ-RT-175–179 (compact output, any-order member decode, float text, string
+escaping).
+
+*Float text (REQ-RT-178) needs an open question at planning:* the shortest
+round-trip digits must come from a primitive library (REQ-RT-100,
+REQ-PERF-070), which must yield them at `f32` width for `float16`/`float32`
+fields; the ECMAScript layout and `-0` are then arranged from those digits,
+which REQ-PERF-070 permits. Name the library and how it is checked against
+the corpus.
 
 **DoD.** Every Phase 1 JSON vector matches exactly. Each §9.2 rule has a
 test named for the requirement it covers, including the rejection cases.

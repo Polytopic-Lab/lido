@@ -958,7 +958,12 @@ Each trades against the project's primary goal.
 - **REQ-PERF-070** The runtime libraries SHALL NOT use `unsafe` Rust,
   hand-written SIMD, or hand-rolled floating-point formatting/parsing in
   v1; such work belongs in the underlying primitive libraries
-  (REQ-RT-100), where it is shared and independently audited.
+  (REQ-RT-100), where it is shared and independently audited. Generating
+  the digits of a float, and parsing them, are that work. Arranging
+  digits that an underlying library has already produced into the layout
+  a requirement fixes (for example REQ-RT-178's `1e+21`, `5e-7` and `-0`)
+  is not hand-rolled formatting, and is permitted provided the layout is
+  exercised by the conformance corpus.
 - **REQ-PERF-080** The system SHALL NOT introduce arena or custom
   allocator infrastructure beyond the caller-supplied buffer support
   already required by REQ-RT-098/150.
